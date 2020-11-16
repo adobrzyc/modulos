@@ -1,0 +1,1 @@
+﻿For now 02.11.2020 pipeline inside transport policy is susspended 

@@ -1,0 +1,12 @@
+﻿/*
+ * 1. Protocol should not use logging mechanism.
+ * 2. Protocol should not use direct monitoring (via monitor provider) - instead ICounterBag should be used. 
+ * 3. [discard] Methods should not throw exception, except parameters validation, instead of that
+ *    they should return error information within prepared result.
+ * 4. Protocol methods should not logging counters with out of the scope knowledge e.q. RequestArrived, ResponseStart.
+ *    In other words protocol methods should measure performed operation.
+ *
+ * 5. 2018-11-17: due to pass ICounterBag as method parameter, maybe exceptions should be immediately thrown
+ *    and ProtocolResult wrapper is not required anymore
+ * 6. 2018-12-11: hydra protocol will not measure size of request neither response
+ */

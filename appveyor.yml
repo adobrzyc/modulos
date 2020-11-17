@@ -30,8 +30,8 @@ artifacts:
   - path: .\artifacts\*.nupkg
     name: NuGet
 
-#deploy:
-#- provider: NuGet
-#  api_key:
-#    secure: JSqGLy0Lt9FkZHBfucPd7MmOi/FpogM4nv529p+X0XCtsBa+5ulAOvUNt9F+gUfy
-#  skip_symbols: true
+deploy:
+- provider: NuGet
+  api_key:
+    secure: JSqGLy0Lt9FkZHBfucPd7MmOi/FpogM4nv529p+X0XCtsBa+5ulAOvUNt9F+gUfy
+  skip_symbols: true

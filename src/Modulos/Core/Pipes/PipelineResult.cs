@@ -23,7 +23,7 @@ namespace Modulos.Pipes
                 .SingleOrDefault(e => typeof(T).IsAssignableFrom(e));
 
             if (key == null)
-               throw new TodoException($"Unable to resolve: {typeof(T).FullName} for pipe: {GetType().FullName}");
+               throw new MissingDataFromPipelineResultException($"Unable to resolve: {typeof(T).FullName} for pipe: {GetType().FullName}");
 
             return (T) availableData[key];
         }
@@ -38,17 +38,24 @@ namespace Modulos.Pipes
             return (T) availableData[key];
         }
 
+        public object[] GetAll()
+        {
+            return availableData.Values.ToArray();
+        }
+
         public async ValueTask DisposeAsync()
         {
             foreach (var pair in availableData)
             {
                 if (pair.Value is IAsyncDisposable asyncDisposable)
-                    await asyncDisposable.DisposeAsync();
+                    await asyncDisposable.DisposeAsync().ConfigureAwait(false);
                 else if(pair.Value is IDisposable disposable)
                 {
                     disposable.Dispose();
                 }
             }
+
+            availableData.Clear();
         }
     }
 }

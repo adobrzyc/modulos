@@ -95,21 +95,23 @@ namespace Modulos
             appInfo = InitializationHelper.GetAppInfoFromAssembly(typeof(TClassInProject).Assembly);
 
             var typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
-            var updaters = typeExplorer.GetSearchableClasses<IUpdateInitializationPipeline>()
-                .Select(Activator.CreateInstance)
-                .Cast<IUpdateInitializationPipeline>().ToArray();
-
-            foreach (var updater in updaters)
-            {
-                updater.Update(iniPipeline);
-            }
-
-            updatePipeline.Invoke(iniPipeline);
-
+            
             using var serviceProvider = new ServiceCollection().BuildServiceProvider();
-            {    
+            {
                 iniPipeline = new Pipeline(serviceProvider);
                 iniPipeline.Add<Initialization.Begin>();
+
+                var updaters = typeExplorer.GetSearchableClasses<IUpdateInitializationPipeline>()
+                    .Select(Activator.CreateInstance)
+                    .Cast<IUpdateInitializationPipeline>().ToArray();
+
+                foreach (var updater in updaters)
+                {
+                    updater.Update(iniPipeline);
+                }
+
+                updatePipeline.Invoke(iniPipeline);
+
 
                 var parameters = additionalParameters.ToList();
                 parameters.Add(localAssemblies);

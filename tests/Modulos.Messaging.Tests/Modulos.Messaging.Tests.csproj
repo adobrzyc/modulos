@@ -44,6 +44,8 @@
     <Compile Include="Tests\.Integration\Simple_scenarios_tests.cs" />
     <Compile Include="Tests\.Integration\Streaming_tests.cs" />
     <Compile Include="Tests\.Unit\MessageConfig_tests.cs" />
+    <Compile Include="Tests\.Unit\Pipeline\Pipeline_execution_tests.cs" />
+    <Compile Include="Tests\.Unit\Pipeline\Pipeline_modify_collection_tests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".Fixtures\Resources\evil.png">
@@ -60,6 +62,7 @@
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.9" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.0" />
     <PackageReference Include="Modulos.Testing" Version="0.1.0" />
+    <PackageReference Include="Moq" Version="4.15.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
       <PrivateAssets>all</PrivateAssets>

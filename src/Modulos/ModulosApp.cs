@@ -138,7 +138,8 @@ namespace Modulos
         }
 
         public IPipelineResult Configure(IServiceProvider serviceProvider,
-            Action<IPipeline> updatePipeline, params object[] additionalParameters)
+            Action<IPipeline> updatePipeline, 
+            params object[] additionalParameters)
         {
             if (serviceProvider == null) throw new ArgumentNullException(nameof(serviceProvider));
             if (updatePipeline == null) throw new ArgumentNullException(nameof(updatePipeline));

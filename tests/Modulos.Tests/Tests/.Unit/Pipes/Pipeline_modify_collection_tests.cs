@@ -10,7 +10,7 @@ using Xunit;
 // ReSharper disable InconsistentNaming
 // ReSharper disable ClassNeverInstantiated.Local
 
-namespace Modulos.Messaging.Tests.Tests.Unit
+namespace Modulos.Tests.Unit.Pipes
 {
     public class Pipeline_modify_collection_tests
     {

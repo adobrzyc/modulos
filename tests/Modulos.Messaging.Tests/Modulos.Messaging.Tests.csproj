@@ -44,8 +44,6 @@
     <Compile Include="Tests\.Integration\Simple_scenarios_tests.cs" />
     <Compile Include="Tests\.Integration\Streaming_tests.cs" />
     <Compile Include="Tests\.Unit\MessageConfig_tests.cs" />
-    <Compile Include="Tests\.Unit\Pipeline\Pipeline_execution_tests.cs" />
-    <Compile Include="Tests\.Unit\Pipeline\Pipeline_modify_collection_tests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".Fixtures\Resources\evil.png">

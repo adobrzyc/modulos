@@ -8,5 +8,6 @@ namespace Modulos.Pipes
     {
         T Get<T>();
         T GetOptional<T>();
+        object[] GetAll();
     }
 }

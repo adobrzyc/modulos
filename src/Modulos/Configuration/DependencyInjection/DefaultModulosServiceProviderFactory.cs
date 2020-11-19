@@ -12,8 +12,8 @@ namespace Modulos
         public DefaultModulosServiceProviderFactory(
             ModulosApp modulos,
             IServiceCollection collection,
-            Action<AutoRegistrationModule> modifier = null) 
-            : base(modulos, ()=> new FakeBuilder(collection), modifier)
+            Action<AutoRegistrationModule> modifier = null, params object[] parameters) 
+            : base(modulos, ()=> new FakeBuilder(collection), modifier, parameters)
         {
         }
         

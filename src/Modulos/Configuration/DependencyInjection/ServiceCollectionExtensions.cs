@@ -10,7 +10,7 @@ namespace Modulos
     {
         /// <summary>
         /// Add modulos to current solution.
-        /// For .net 3.1+ it's recommended to use <see cref="DefaultModulosServiceProviderFactory"/>.
+        /// For ASP.NET Core 3.1+ it's recommended to use <see cref="DefaultModulosServiceProviderFactory"/>.
         /// </summary>
         /// <param name="services">IServiceCollection instance.</param>
         /// <param name="modulos">Instance of modulos application</param>
@@ -18,13 +18,32 @@ namespace Modulos
         /// Enables to redefine detected modules. For example, it may be used to
         /// load only particular modules in test environments. 
         /// </param>
+        /// <param name="additionalData">Additional data available for modules.</param>
         public static IServiceCollection AddModulos(this IServiceCollection services, 
             ModulosApp modulos, 
-            Action<AutoRegistrationModule> modifier = null)
+            Action<AutoRegistrationModule> modifier = null, 
+            params object[] additionalData)
         {
-            var factory = new DefaultModulosServiceProviderFactory(modulos, services, modifier);
+            var factory = new DefaultModulosServiceProviderFactory(modulos, services, modifier, additionalData);
             return factory.CreateBuilder(services).Collection;
         }
+
+        /// <summary>
+        /// Add modulos to current solution.
+        /// For ASP.NET Core 3.1+ it's recommended to use <see cref="DefaultModulosServiceProviderFactory"/>.
+        /// </summary>
+        /// <param name="services">IServiceCollection instance.</param>
+        /// <param name="modulos">Instance of modulos application</param>
+        /// <param name="additionalData">Additional data available for modules.</param>
+        public static IServiceCollection AddModulos(this IServiceCollection services, 
+            ModulosApp modulos,
+            params object[] additionalData)
+        {
+            var factory = new DefaultModulosServiceProviderFactory(modulos, services, null, additionalData);
+            return factory.CreateBuilder(services).Collection;
+        }
+
+
 
 
         public static IServiceCollection AddSingletonAsImplementedInterfacesAndSelf<T>(this IServiceCollection collection) where T:class

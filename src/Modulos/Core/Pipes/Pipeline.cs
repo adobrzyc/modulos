@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Transactions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Modulos.Pipes
@@ -23,48 +24,110 @@ namespace Modulos.Pipes
             this.serviceProvider = serviceProvider;
         }
 
+
         public void Add<T>() where T : IPipe
         {
-            ThrowIfAlreadyExists(typeof(T));
-            pipes.Add(typeof(T));
+            Add(typeof(T));
         }
 
         public void Add(Type pipeType)
         {
-            if (!typeof(IPipe).IsAssignableFrom(pipeType))
-                throw new TodoException("Not supported pipe type.");
-
+            ThrowIfWrongPipeType(pipeType);
             ThrowIfAlreadyExists(pipeType);
             pipes.Add(pipeType);
         }
 
         public bool Remove<T>() where T : IPipe
         {
-            return pipes.Remove(typeof(T));
+            return Remove(typeof(T));
+        }
+
+        public bool Remove(Type pipeType) 
+        {
+            ThrowIfWrongPipeType(pipeType);
+            return pipes.Remove(pipeType);
         }
 
         public void Insert<TPipeToFind, TPipeToInsert>(InsertType insertType)
             where TPipeToFind : IPipe
             where TPipeToInsert : IPipe
         {
-            ThrowIfAlreadyExists(typeof(TPipeToInsert));
-            var indexOf = pipes.IndexOf(typeof(TPipeToFind));
+            Insert(insertType,typeof(TPipeToFind),typeof(TPipeToInsert));
+        }
+        
+        public void Insert(InsertType insertType, Type pipeToFind, Type pipeToInsert)
+        {
+            ThrowIfWrongPipeType(pipeToFind);
+            ThrowIfWrongPipeType(pipeToInsert);
 
+            ThrowIfAlreadyExists(pipeToInsert);
+            var indexOf = pipes.IndexOf(pipeToFind);
+            if(indexOf < 0)
+                throw new ArgumentException($"Pipe does not exists: {pipeToFind.Name}.");
             switch (insertType)
             {
                 case InsertType.After:
-                    pipes.Insert(indexOf + 1, typeof(TPipeToInsert));
+                    pipes.Insert(indexOf + 1, pipeToInsert);
                     break;
                 case InsertType.Before:
-                    if (indexOf == 0)
-                        indexOf = 1;
-                    pipes.Insert(indexOf, typeof(TPipeToInsert));
+                    pipes.Insert(indexOf, pipeToInsert);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(insertType), insertType, null);
             }
 
         }
+
+        public void AddOrReplace<T>() where T : IPipe
+        {
+           AddOrReplace(typeof(T));
+        } 
+
+        public void AddOrReplace(Type pipeType)
+        {
+            ThrowIfWrongPipeType(pipeType);
+
+            var index = pipes.IndexOf(pipeType);
+            if (index < 0)
+            {
+                Add(pipeType);
+                return;
+            }
+
+            pipes.Insert(index + 1, pipeType);
+            pipes.RemoveAt(index);
+        } 
+
+        public void TryRemoveAndAdd<T>() where T : IPipe
+        {
+            TryRemoveAndAdd(typeof(T));
+        } 
+
+        public void TryRemoveAndAdd(Type pipeType)
+        {
+            ThrowIfWrongPipeType(pipeType);
+
+            var index = pipes.IndexOf(pipeType);
+            if (index >= 0)
+            {
+                pipes.RemoveAt(index);
+            }
+            Add(pipeType);
+        }
+
+        public int IndexOf<T>() where T : IPipe
+        {
+            return IndexOf(typeof(T));
+        }
+
+        public int IndexOf(Type pipeType)
+        {
+            ThrowIfWrongPipeType(pipeType);
+
+            return pipes.IndexOf(pipeType);
+        }
+
+
 
         public IEnumerable<Type> GetPipes()
         {
@@ -134,17 +197,18 @@ namespace Modulos.Pipes
 
                 references.AddRange(result.PublishedData);
                 //publishedObjects.AddRange(result.PublishedData);
-
+               
                 switch (result.Action)
                 {
                     case PipeActionAfterExecute.Continue:
-
                         continue;
                     case PipeActionAfterExecute.Break:
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
+
+                return new PipelineResult(references);
             }
 
             return new PipelineResult(references);
@@ -229,7 +293,13 @@ namespace Modulos.Pipes
         private void ThrowIfAlreadyExists(Type pipeType)
         {
             if (pipes.Contains(pipeType))
-                throw new ArgumentException($"Pipe already exists: {pipeType.Name}.");
+                throw new ArgumentException($"Pipe already exists.", pipeType.Name);
+        }
+
+        private void ThrowIfWrongPipeType(Type pipeType)
+        {
+            if (!typeof(IPipe).IsAssignableFrom(pipeType))
+                throw new ArgumentException("Not supported pipe type.", pipeType.Name);
         }
 
         private static ObjectActivator CreateObjectActivator(ConstructorInfo ctor)

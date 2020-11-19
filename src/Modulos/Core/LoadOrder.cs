@@ -17,7 +17,7 @@ namespace Modulos
         Library,
 
         /// <summary>
-        /// Reserved for elements located in non-app solution projects.
+        /// Reserved for elements located in solution projects.
         /// </summary>
         Project,
 

@@ -7,7 +7,7 @@ namespace Modulos
     /// Used to unify installation 'modulos' for .net core 3.1+ environments.
     /// May be used to register modulos app in .net 3.1+ environments.
     /// </summary>
-    public sealed class DefaultModulosServiceProviderFactory : ModulosServiceProviderFactory<FakeBuilder>
+    internal sealed class DefaultModulosServiceProviderFactory : ModulosServiceProviderFactory<FakeBuilder>
     {
         public DefaultModulosServiceProviderFactory(
             ModulosApp modulos,

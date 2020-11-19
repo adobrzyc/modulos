@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Modulos
 {
-    [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
     public abstract class ModulosServiceProviderFactory<TBuilder> : IServiceProviderFactory<TBuilder>
     {
         private readonly ModulosApp modulos;

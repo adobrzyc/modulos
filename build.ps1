@@ -26,9 +26,5 @@ function Exec
 exec { & dotnet restore }
 
 exec { & dotnet build  .\src\Modulos\Modulos.csproj -c Release}
-exec { & dotnet build  .\src\Modulos.Autofac\Modulos.Autofac.csproj -c Release}
-exec { & dotnet build  .\src\Modulos.Messaging\Modulos.Messaging.csproj -c Release}
 
 exec { & dotnet pack .\src\Modulos\Modulos.csproj -c Release -o .\artifacts }
-exec { & dotnet pack .\src\Modulos.Autofac\Modulos.Autofac.csproj -c Release -o .\artifacts }
-exec { & dotnet pack .\src\Modulos.Messaging\Modulos.Messaging.csproj -c Release -o .\artifacts }

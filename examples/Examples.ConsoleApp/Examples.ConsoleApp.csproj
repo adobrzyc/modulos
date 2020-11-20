@@ -6,6 +6,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include=".Config\Configuration\Pipes\ConfigureAppWhenFileStorage.cs" />
+    <Compile Include=".Config\Configuration\Pipes\ConfigureAppWhenInMemoryStorage.cs" />
+    <Compile Include=".Config\Configuration\UpdateConfigPipeline.cs" />
+    <Compile Include=".Config\Initialization\Pipes\MakeSomeActionBaseOnConfiguration.cs" />
+    <Compile Include=".Config\Initialization\Pipes\PrepareConfiguration.cs" />
+    <Compile Include=".Config\Initialization\UpdateInitializationPipeline.cs" />
+    <Compile Include="Domain\Storage\.Config\RegisterStorageModule.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
   </ItemGroup>
 

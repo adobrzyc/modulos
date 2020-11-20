@@ -15,7 +15,7 @@ using Modulos.Pipes;
 
 namespace Modulos
 {
-    public partial class ModulosApp
+    public sealed partial class ModulosApp : IDisposable
     {
         public Assembly[] Assemblies
         {
@@ -73,6 +73,8 @@ namespace Modulos
         private bool initialized;
         private IPipeline iniPipeline;
         private IPipeline configPipeline;
+        private IPipelineResult iniResult;
+        private IPipelineResult configResult;
 
         public IPipelineResult Initialize<TClassInProject>(params object[] additionalParameters) where TClassInProject : class
         {
@@ -114,11 +116,16 @@ namespace Modulos
 
 
                 var parameters = additionalParameters.ToList();
-                parameters.Add(localAssemblies);
-                parameters.Add(typeExplorer);
-                parameters.Add(new AssemblyExplorer(localAssemblies));
+                if(!parameters.Any(e=>e is IAppInfo))
+                    parameters.Add(appInfo);
+                if(!parameters.Any(e=>e is Assembly[]))
+                    parameters.Add(localAssemblies);
+                if(!parameters.Any(e=>e is ITypeExplorer))
+                    parameters.Add(typeExplorer);
+                if(!parameters.Any(e=>e is IAssemblyExplorer))
+                    parameters.Add(new AssemblyExplorer(localAssemblies));
 
-                var result = iniPipeline.Execute(CancellationToken.None, parameters.ToArray())
+                iniResult = iniPipeline.Execute(CancellationToken.None, parameters.ToArray())
                     .GetAwaiter().GetResult();
 
                 lock (locker)
@@ -126,7 +133,7 @@ namespace Modulos
                     initialized = true;
                 }
 
-                return result;
+                return iniResult;
             }
         }
 
@@ -169,11 +176,17 @@ namespace Modulos
                 }
 
                 var parameters = additionalParameters.ToList();
-                parameters.Add(localAssemblies);
-                parameters.Add(typeExplorer);
-                parameters.Add(new AssemblyExplorer(localAssemblies));
+                if(!parameters.Any(e=>e is IAppInfo))
+                    parameters.Add(appInfo);
+                if(!parameters.Any(e=>e is Assembly[]))
+                    parameters.Add(localAssemblies);
+                if(!parameters.Any(e=>e is ITypeExplorer))
+                    parameters.Add(typeExplorer);
+                if(!parameters.Any(e=>e is IAssemblyExplorer))
+                    parameters.Add(new AssemblyExplorer(localAssemblies));
 
-                return configPipeline.Execute(CancellationToken.None, parameters.ToArray())
+                return configResult = configPipeline.Execute(CancellationToken.None, 
+                        parameters.ToArray())
                     .GetAwaiter().GetResult();
             }
         }
@@ -209,6 +222,12 @@ namespace Modulos
             {
                 assemblies = result.ToArray();
             }
+        }
+
+        public void Dispose()
+        {
+            iniResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            configResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }

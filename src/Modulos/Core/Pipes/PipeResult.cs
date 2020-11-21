@@ -15,5 +15,15 @@ namespace Modulos.Pipes
             Action = action;
             PublishedData = data;
         }
+
+        public static PipeResult NewContinue(params object[] data)
+        {
+            return new PipeResult(PipeActionAfterExecute.Continue, data);
+        }
+
+        public static PipeResult NewBreak(params object[] data)
+        {
+            return new PipeResult(PipeActionAfterExecute.Break, data);
+        }
     }
 }

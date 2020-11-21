@@ -32,6 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{40
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Examples.AspNetCoreApp", "examples\Examples.AspNetCoreApp\Examples.AspNetCoreApp.csproj", "{3A44E2D7-1075-4831-A2AD-86465E43D1EB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples.Modulos", "examples\Examples.Modulos\Examples.Modulos.csproj", "{9985633C-6299-48DE-A366-7362E7A1A248}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,6 +56,10 @@ Global
 		{3A44E2D7-1075-4831-A2AD-86465E43D1EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3A44E2D7-1075-4831-A2AD-86465E43D1EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3A44E2D7-1075-4831-A2AD-86465E43D1EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9985633C-6299-48DE-A366-7362E7A1A248}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9985633C-6299-48DE-A366-7362E7A1A248}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9985633C-6299-48DE-A366-7362E7A1A248}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9985633C-6299-48DE-A366-7362E7A1A248}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -63,6 +69,7 @@ Global
 		{A79FE340-2DA6-46DD-A9CA-7B98EF3492E2} = {3C8AD884-FDFE-433E-90E3-8B819450F67E}
 		{F551D701-48F3-488D-9A9D-B27C7A89201F} = {40F81756-9511-43F6-97C2-E1CE0C8C4032}
 		{3A44E2D7-1075-4831-A2AD-86465E43D1EB} = {40F81756-9511-43F6-97C2-E1CE0C8C4032}
+		{9985633C-6299-48DE-A366-7362E7A1A248} = {40F81756-9511-43F6-97C2-E1CE0C8C4032}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4C18E66A-240C-429A-AA96-942CA9C8903A}

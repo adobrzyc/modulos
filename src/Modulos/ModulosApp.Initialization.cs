@@ -21,9 +21,9 @@ namespace Modulos
             /// </summary>
             public class Begin : IPipe
             {
-                public Task<PipeResult> Execute(CancellationToken cancellationToken)
+                public ValueTask<PipeResult> Execute(CancellationToken cancellationToken)
                 {
-                    return Task.FromResult(new PipeResult(PipeActionAfterExecute.Continue));
+                    return new ValueTask<PipeResult>(PipeResult.Continue);
                 }
             }
         }

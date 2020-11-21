@@ -18,7 +18,7 @@ namespace Examples.ConsoleApp.Config
             this.config = config;
         }
 
-        public Task<PipeResult> Execute(CancellationToken cancellationToken)
+        public ValueTask<PipeResult> Execute(CancellationToken cancellationToken)
         {
             Console.WriteLine("MakeSomeActionBaseOnConfiguration...");
             foreach (var pair in config.AsEnumerable())
@@ -26,7 +26,7 @@ namespace Examples.ConsoleApp.Config
                 Console.WriteLine(pair);
             }
             
-            return Task.FromResult(PipeResult.Continue);
+            return new ValueTask<PipeResult>(PipeResult.Continue);
         }
     }
 }

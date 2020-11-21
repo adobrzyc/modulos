@@ -53,33 +53,33 @@ namespace Modulos.Tests.Unit.Pipes
 
         private class Pipe1 : IPipe
         {
-            public Task<PipeResult> Execute(CancellationToken cancellationToken)
+            public ValueTask<PipeResult> Execute(CancellationToken cancellationToken)
             {
-                return Task.FromResult(PipeResult.Continue);
+                return new ValueTask<PipeResult>(PipeResult.Continue);
             }
         }
 
         private class Pipe2 : IPipe
         {
-            public Task<PipeResult> Execute(CancellationToken cancellationToken)
+            public ValueTask<PipeResult> Execute(CancellationToken cancellationToken)
             {
-                return Task.FromResult(PipeResult.Continue);
+                return new ValueTask<PipeResult>(PipeResult.Continue);
             }
         }
 
         private class Pipe3 : IPipe
         {
-            public Task<PipeResult> Execute(CancellationToken cancellationToken)
+            public ValueTask<PipeResult> Execute(CancellationToken cancellationToken)
             {
-                return Task.FromResult(PipeResult.Continue);
+                return new ValueTask<PipeResult>(PipeResult.Continue);
             }
         }
 
         private class Break : IPipe
         {
-            public Task<PipeResult> Execute(CancellationToken cancellationToken)
+            public ValueTask<PipeResult> Execute(CancellationToken cancellationToken)
             {
-                return Task.FromResult(PipeResult.Break);
+                return new ValueTask<PipeResult>(PipeResult.Break);
             }
         }
     }

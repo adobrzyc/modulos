@@ -17,11 +17,11 @@ namespace Examples.ConsoleApp.Config
             this.storage = storage;
         }
 
-        public Task<PipeResult> Execute(CancellationToken cancellationToken)
+        public ValueTask<PipeResult> Execute(CancellationToken cancellationToken)
         {
             Console.WriteLine($"{GetType().Name}...");
             Console.WriteLine(storage.ToString());
-            return Task.FromResult(PipeResult.Continue);
+            return new ValueTask<PipeResult>(PipeResult.Continue);
         }
     }
 }

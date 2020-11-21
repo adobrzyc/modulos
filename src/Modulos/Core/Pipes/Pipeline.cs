@@ -7,8 +7,9 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Transactions;
 using Microsoft.Extensions.DependencyInjection;
+
+// ReSharper disable UnusedMember.Global
 
 namespace Modulos.Pipes
 {
@@ -22,6 +23,10 @@ namespace Modulos.Pipes
         public Pipeline(IServiceProvider serviceProvider)
         {
             this.serviceProvider = serviceProvider;
+        }
+
+        public Pipeline()
+        {
         }
 
 
@@ -148,7 +153,6 @@ namespace Modulos.Pipes
         {
             var optionalPipes = new List<Type>();
             var references = new List<object>(additionalReferences);
-            //var publishedObjects = new List<object>();
 
             foreach (var pipeType in pipes)
             {
@@ -161,11 +165,8 @@ namespace Modulos.Pipes
 
                     var optional = resolveOptionalResult.Pipe;
                     references.Add(optional);
-                    //publishedObjects.Add(optional);
-
                     var optionalResult = await optional.Execute(cancellationToken);
                     references.AddRange(optionalResult.PublishedData);
-                    //publishedObjects.AddRange(optionalResult.PublishedData);
 
                     switch (optionalResult.Action)
                     {
@@ -192,12 +193,10 @@ namespace Modulos.Pipes
 
                 var instance = resolveResult.Pipe;
                 references.Add(instance);
-                //publishedObjects.Add(instance);
                 var result = await instance.Execute(cancellationToken);
 
                 references.AddRange(result.PublishedData);
-                //publishedObjects.AddRange(result.PublishedData);
-               
+
                 switch (result.Action)
                 {
                     case PipeActionAfterExecute.Continue:
@@ -213,6 +212,7 @@ namespace Modulos.Pipes
 
             return new PipelineResult(references);
         }
+
 
         private class ResolvePipeResult
         {
@@ -234,8 +234,14 @@ namespace Modulos.Pipes
                 .Select(e => e.ctor)
                 .First();
 
-            
-            var @params = additionalData.ToDictionary(e => e.GetType(), e => e);
+            var @params = new Dictionary<Type,object>();
+            foreach (var data in additionalData)
+            {
+                var key = data.GetType();
+                if (@params.ContainsKey(key))
+                    @params[key] = data;
+                else @params.Add(key,data);
+            }
 
             var parameters = new List<object>();
             foreach (var paramInfo in ctor.GetParameters())
@@ -256,11 +262,23 @@ namespace Modulos.Pipes
 
                 if ((paramInfo.Attributes & ParameterAttributes.Optional) != 0)
                 {
-                    var value = serviceProvider.GetService(paramInfo.ParameterType);
+                    var value = serviceProvider?.GetService(paramInfo.ParameterType);
                     parameters.Add(value);
                 }
                 else
                 {
+                    if (serviceProvider == null)
+                    {
+                        if (typeof(IOptionalPipe).IsAssignableFrom(typeToResolve))
+                            return new ResolvePipeResult(false, null);
+
+                        throw new UnableToResolvePipeException
+                        (
+                            $"Unable to resolve pipe: {typeToResolve.FullName} " +
+                            $"parameter: {paramInfo.Name} of type {paramInfo.ParameterType.FullName}."
+                        );
+                    }
+
                     try
                     {
                         var value = serviceProvider.GetRequiredService(paramInfo.ParameterType);
@@ -271,7 +289,7 @@ namespace Modulos.Pipes
                         if (typeof(IOptionalPipe).IsAssignableFrom(typeToResolve))
                             return new ResolvePipeResult(false, null);
 
-                        throw new TodoException
+                        throw new UnableToResolvePipeException
                         (
                             $"Unable to resolve pipe: {typeToResolve.FullName} " +
                             $"parameter: {paramInfo.Name} of type {paramInfo.ParameterType.FullName}.", e

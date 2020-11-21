@@ -12,7 +12,7 @@ namespace Examples.ConsoleApp.Config
 {
     public sealed class PrepareConfiguration : IPipe
     {
-        public Task<PipeResult> Execute(CancellationToken cancellationToken)
+        public ValueTask<PipeResult> Execute(CancellationToken cancellationToken)
         {
             Console.WriteLine("PrepareConfiguration...");
 
@@ -29,8 +29,7 @@ namespace Examples.ConsoleApp.Config
 
             var result = new PipeResult(PipeActionAfterExecute.Continue, config);
 
-            
-            return Task.FromResult(result);
+            return new ValueTask<PipeResult>(result); 
         }
     }
 }

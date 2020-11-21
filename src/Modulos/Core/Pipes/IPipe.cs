@@ -5,6 +5,6 @@ namespace Modulos.Pipes
 {
     public interface IPipe
     {
-        Task<PipeResult> Execute(CancellationToken cancellationToken);
+        ValueTask<PipeResult> Execute(CancellationToken cancellationToken);
     }
 }

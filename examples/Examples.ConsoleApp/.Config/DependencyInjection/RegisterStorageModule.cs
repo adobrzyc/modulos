@@ -1,8 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Examples.ConsoleApp.Storage;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Modulos;
 
-namespace Examples.ConsoleApp.Storage.Config
+namespace Examples.ConsoleApp.Config
 {
     public class RegisterStorageModule : MicrosoftDiModule
     {

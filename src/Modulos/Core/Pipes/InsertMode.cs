@@ -1,6 +1,6 @@
 ﻿namespace Modulos.Pipes
 {
-    public enum InsertType
+    public enum InsertMode
     {
         After,
         Before

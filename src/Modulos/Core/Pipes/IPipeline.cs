@@ -23,11 +23,11 @@ namespace Modulos.Pipes
         bool Remove<T>() where T : IPipe;
         bool Remove(Type pipeType);
 
-        void Insert<TPipeToFind, TPipeToInsert>(InsertType insertType)
+        void Insert<TPipeToFind, TPipeToInsert>(InsertMode mode)
             where TPipeToFind : IPipe
             where TPipeToInsert : IPipe;
 
-        void Insert(InsertType insertType, Type pipeToFind, Type pipeToInsert);
+        void Insert(InsertMode mode, Type pipeToFind, Type pipeToInsert);
 
 
         void TryRemoveAndAdd<T>() where T : IPipe;

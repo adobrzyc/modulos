@@ -140,7 +140,7 @@ namespace Modulos.Tests.Unit.Pipes
             
             pipeline.Add<Pipe1>();
             pipeline.Add<Pipe3>();
-            pipeline.Insert<Pipe1,Pipe2>(InsertType.Before);
+            pipeline.Insert<Pipe1,Pipe2>(InsertMode.Before);
             pipeline.Count().Should().Be(3);
             pipeline.IndexOf<Pipe1>().Should().Be(1);
             pipeline.IndexOf<Pipe2>().Should().Be(0);
@@ -155,7 +155,7 @@ namespace Modulos.Tests.Unit.Pipes
             
             pipeline.Add<Pipe1>();
             pipeline.Add<Pipe3>();
-            pipeline.Insert<Pipe1,Pipe2>(InsertType.After);
+            pipeline.Insert<Pipe1,Pipe2>(InsertMode.After);
             pipeline.Count().Should().Be(3);
             pipeline.IndexOf<Pipe1>().Should().Be(0);
             pipeline.IndexOf<Pipe2>().Should().Be(1);
@@ -169,14 +169,14 @@ namespace Modulos.Tests.Unit.Pipes
             var pipeline = new Pipeline(sp.Object);
             var logic = new Action(() =>
             {
-                pipeline.Insert(InsertType.Before, typeof(NotPipe),typeof(Pipe1));
+                pipeline.Insert(InsertMode.Before, typeof(NotPipe),typeof(Pipe1));
             });
 
             logic.Should().ThrowExactly<ArgumentException>();
 
             logic = () =>
             {
-                pipeline.Insert(InsertType.Before, typeof(Pipe1),typeof(NotPipe));
+                pipeline.Insert(InsertMode.Before, typeof(Pipe1),typeof(NotPipe));
             };
 
             logic.Should().ThrowExactly<ArgumentException>();

@@ -53,14 +53,14 @@ namespace Modulos.Pipes
             return pipes.Remove(pipeType);
         }
 
-        public void Insert<TPipeToFind, TPipeToInsert>(InsertType insertType)
+        public void Insert<TPipeToFind, TPipeToInsert>(InsertMode mode)
             where TPipeToFind : IPipe
             where TPipeToInsert : IPipe
         {
-            Insert(insertType,typeof(TPipeToFind),typeof(TPipeToInsert));
+            Insert(mode,typeof(TPipeToFind),typeof(TPipeToInsert));
         }
         
-        public void Insert(InsertType insertType, Type pipeToFind, Type pipeToInsert)
+        public void Insert(InsertMode mode, Type pipeToFind, Type pipeToInsert)
         {
             ThrowIfWrongPipeType(pipeToFind);
             ThrowIfWrongPipeType(pipeToInsert);
@@ -69,16 +69,16 @@ namespace Modulos.Pipes
             var indexOf = pipes.IndexOf(pipeToFind);
             if(indexOf < 0)
                 throw new ArgumentException($"Pipe does not exists: {pipeToFind.Name}.");
-            switch (insertType)
+            switch (mode)
             {
-                case InsertType.After:
+                case InsertMode.After:
                     pipes.Insert(indexOf + 1, pipeToInsert);
                     break;
-                case InsertType.Before:
+                case InsertMode.Before:
                     pipes.Insert(indexOf, pipeToInsert);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(insertType), insertType, null);
+                    throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
 
         }

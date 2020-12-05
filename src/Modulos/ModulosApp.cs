@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -21,30 +20,30 @@ namespace Modulos
         {
             get 
             {
-                lock (locker)
+                lock (_locker)
                 {
-                    if (!initialized)
+                    if (!_initialized)
                         throw new InvalidOperationException
                         (
                             $"Property: {nameof(Assemblies)}" +
                             " is available after initialization process."
                         );
 
-                    return assemblies;
+                    return _assemblies;
                 }
             }
             private set
             {
-                lock (locker)
+                lock (_locker)
                 {
-                    if (initialized)
+                    if (_initialized)
                         throw new InvalidOperationException
                         (
                             $"Property: {nameof(Assemblies)}" +
                             " can not be set after initialization is performed."
                         );
 
-                    assemblies = value;
+                    _assemblies = value;
                 }
             }
         }
@@ -53,28 +52,28 @@ namespace Modulos
         {
             get
             {
-                lock (locker)
+                lock (_locker)
                 {
-                    if (!initialized)
+                    if (!_initialized)
                         throw new InvalidOperationException
                         (
                             $"Property: {nameof(AppInfo)}" +
                             " is available after initialization process."
                         );
 
-                    return appInfo;
+                    return _appInfo;
                 }
             }
         }
 
-        private readonly object locker = new object();
-        private AppInfo appInfo;
-        private Assembly[] assemblies;
-        private bool initialized;
-        private IPipeline iniPipeline;
-        private IPipeline configPipeline;
-        private IPipelineResult iniResult;
-        private IPipelineResult configResult;
+        private readonly object _locker = new object();
+        private AppInfo _appInfo;
+        private Assembly[] _assemblies;
+        private bool _initialized;
+        private IPipeline _iniPipeline;
+        private IPipeline _configPipeline;
+        private IPipelineResult _iniResult;
+        private IPipelineResult _configResult;
 
         public IPipelineResult Initialize<TClassInProject>(params object[] additionalParameters) where TClassInProject : class
         {
@@ -86,22 +85,22 @@ namespace Modulos
         {
             if (updatePipeline == null) throw new ArgumentNullException(nameof(updatePipeline));
             Assembly[] localAssemblies;
-            lock (locker)
+            lock (_locker)
             {
-                if (assemblies == null)
-                    UseNetCore();
+                if (_assemblies == null)
+                    ExploreAssemblies();
 
-                localAssemblies = assemblies;
+                localAssemblies = _assemblies;
             }
 
-            appInfo = InitializationHelper.GetAppInfoFromAssembly(typeof(TClassInProject).Assembly);
+            _appInfo = InitializationHelper.GetAppInfoFromAssembly(typeof(TClassInProject).Assembly);
 
             var typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
             
             using var serviceProvider = new ServiceCollection().BuildServiceProvider();
             {
-                iniPipeline = new Pipeline(serviceProvider);
-                iniPipeline.Add<Initialization.Begin>();
+                _iniPipeline = new Pipeline(serviceProvider);
+                _iniPipeline.Add<Initialization.Begin>();
 
                 var updaters = typeExplorer.GetSearchableClasses<IUpdateInitializationPipeline>()
                     .Select(Activator.CreateInstance)
@@ -109,15 +108,15 @@ namespace Modulos
 
                 foreach (var updater in updaters)
                 {
-                    updater.Update(iniPipeline);
+                    updater.Update(_iniPipeline);
                 }
 
-                updatePipeline.Invoke(iniPipeline);
+                updatePipeline.Invoke(_iniPipeline);
 
 
                 var parameters = additionalParameters.ToList();
                 if(!parameters.Any(e=>e is IAppInfo))
-                    parameters.Add(appInfo);
+                    parameters.Add(_appInfo);
                 if(!parameters.Any(e=>e is Assembly[]))
                     parameters.Add(localAssemblies);
                 if(!parameters.Any(e=>e is ITypeExplorer))
@@ -125,15 +124,15 @@ namespace Modulos
                 if(!parameters.Any(e=>e is IAssemblyExplorer))
                     parameters.Add(new AssemblyExplorer(localAssemblies));
 
-                iniResult = iniPipeline.Execute(CancellationToken.None, parameters.ToArray())
+                _iniResult = _iniPipeline.Execute(CancellationToken.None, parameters.ToArray())
                     .GetAwaiter().GetResult();
 
-                lock (locker)
+                lock (_locker)
                 {
-                    initialized = true;
+                    _initialized = true;
                 }
 
-                return iniResult;
+                return _iniResult;
             }
         }
 
@@ -152,18 +151,18 @@ namespace Modulos
             if (updatePipeline == null) throw new ArgumentNullException(nameof(updatePipeline));
 
             Assembly[] localAssemblies;
-            lock (locker)
+            lock (_locker)
             {
-                if (assemblies == null)
-                    UseNetCore();
+                if (_assemblies == null)
+                    ExploreAssemblies();
 
-                localAssemblies = assemblies;
+                localAssemblies = _assemblies;
             }
 
             using var scope = serviceProvider.CreateScope();
             {
-                configPipeline = new Pipeline(scope.ServiceProvider);
-                configPipeline.Add<Configuration.Begin>();
+                _configPipeline = new Pipeline(scope.ServiceProvider);
+                _configPipeline.Add<Configuration.Begin>();
 
                 var typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
                 var updaters = typeExplorer.GetSearchableClasses<IUpdateConfigPipeline>()
@@ -172,12 +171,12 @@ namespace Modulos
 
                 foreach (var updater in updaters)
                 {
-                    updater.Update(configPipeline);
+                    updater.Update(_configPipeline);
                 }
 
                 var parameters = additionalParameters.ToList();
                 if(!parameters.Any(e=>e is IAppInfo))
-                    parameters.Add(appInfo);
+                    parameters.Add(_appInfo);
                 if(!parameters.Any(e=>e is Assembly[]))
                     parameters.Add(localAssemblies);
                 if(!parameters.Any(e=>e is ITypeExplorer))
@@ -185,49 +184,84 @@ namespace Modulos
                 if(!parameters.Any(e=>e is IAssemblyExplorer))
                     parameters.Add(new AssemblyExplorer(localAssemblies));
 
-                return configResult = configPipeline.Execute(CancellationToken.None, 
+                return _configResult = _configPipeline.Execute(CancellationToken.None, 
                         parameters.ToArray())
                     .GetAwaiter().GetResult();
             }
         }
 
-        public void UseNetCore(Predicate<RuntimeLibrary> predicate = null)
+
+        private void ExploreAssemblies(Predicate<Assembly> predicate = null)
         {
-            lock (locker)
+            lock (_locker)
             {
-                if (initialized)
+                if (_initialized)
                     throw new InvalidOperationException("Can not call this method after initialization.");
             }
 
-            var watch = Stopwatch.StartNew();
             var result = new List<Assembly>();
-            var dependencies = DependencyContext.Default.RuntimeLibraries
-                .Where(e => predicate == null || predicate(e));
+            var dependencies = DependencyContext.Default?.RuntimeLibraries;
 
-            foreach (var library in dependencies)
+            if (dependencies != null)
             {
-                if (!InitializationHelper.IsModulosAssembly(library)) continue;
-
-                foreach (var assemblyName in library.GetDefaultAssemblyNames(DependencyContext.Default))
+                foreach (var library in dependencies)
                 {
-                    var assembly = Assembly.Load(assemblyName);
-                    result.Add(assembly);
+                    if (!InitializationHelper.IsModulosAssembly(library)) continue;
+                    foreach (var assemblyName in library.GetDefaultAssemblyNames(DependencyContext.Default))
+                    {
+                        var assembly = Assembly.Load(assemblyName);
+                        if(predicate == null || predicate(assembly))
+                            result.Add(assembly);
+                    }
+                }
+
+                lock (_locker)
+                {
+                    _assemblies = result.ToArray();
                 }
             }
-
-            watch.Stop();
-            Debug.WriteLine($"Assemblies with modulos loaded in {watch.ElapsedMilliseconds} ms");
-
-            lock (locker)
+            else
             {
-                assemblies = result.ToArray();
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(e => predicate == null || predicate(e)).ToArray();
+
+                foreach (var library in assemblies)
+                {
+                    if (!InitializationHelper.IsModulosAssembly(library)) continue;
+
+                    result.Add(library);
+                }
+
+                lock (_locker)
+                {
+                    _assemblies = result.ToArray();
+                }
             }
+        }
+
+        /// <summary>
+        /// Prevent Modulos from exploring assemblies by setting it manually.
+        /// </summary>
+        /// <param name="assemblies">Assemblies to set.</param>
+        public void SetAssemblies(Assembly[] assemblies)
+        {
+            lock (_locker)
+            {
+                if (_initialized)
+                    throw new InvalidOperationException("Can not call this method after initialization.");
+            }
+
+            lock (_locker)
+            {
+                _assemblies = assemblies.ToArray();
+            }
+
         }
 
         public void Dispose()
         {
-            iniResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-            configResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            _iniResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            _configResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
         }
     }
 }

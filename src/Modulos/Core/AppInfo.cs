@@ -14,7 +14,7 @@ namespace Modulos
     [DataContract]
     public class AppInfo : IAppInfo
     {
-        [DataMember] private long? startTimeUtc;
+        [DataMember] private long? _startTimeUtc;
 
         [DataMember] public Guid Id { get; private set; }
 
@@ -30,7 +30,7 @@ namespace Modulos
 
         public AppInfo(IAppInfo source): this(source.Id,source.Name,source.Version)
         {
-            startTimeUtc = source.StartTimeUtc.Ticks;
+            _startTimeUtc = source.StartTimeUtc.Ticks;
         }
 
         public AppInfo(Guid id, string name, string version)
@@ -45,10 +45,10 @@ namespace Modulos
         {
             get
             {
-                if (startTimeUtc == null)
-                    startTimeUtc = DateTime.UtcNow.Ticks;
+                if (_startTimeUtc == null)
+                    _startTimeUtc = DateTime.UtcNow.Ticks;
 
-                return new DateTime(startTimeUtc.Value, DateTimeKind.Utc);
+                return new DateTime(_startTimeUtc.Value, DateTimeKind.Utc);
             }
         }
 

@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
+
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedType.Global
 
 namespace Modulos
 {
-    [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public static class ServiceCollectionExtensions
     {
         /// <summary>
         /// Add modulos to current solution.
-        /// For ASP.NET Core 3.1+ it's recommended to use <see cref="DefaultModulosServiceProviderFactory"/>.
+        /// For ASP.NET Core 3.1+ it's recommended to use <see cref="ModulosServiceProviderFactory"/>.
         /// </summary>
         /// <param name="services">IServiceCollection instance.</param>
         /// <param name="modulos">Instance of modulos application</param>
@@ -24,13 +24,14 @@ namespace Modulos
             Action<AutoRegistrationModule> modifier = null, 
             params object[] additionalData)
         {
-            var factory = new DefaultModulosServiceProviderFactory(modulos, services, modifier, additionalData);
-            return factory.CreateBuilder(services).Collection;
+            var factory = new ModulosServiceProviderFactory(modulos, modifier, additionalData);
+            factory.CreateBuilder(services);
+            return services;
         }
 
         /// <summary>
         /// Add modulos to current solution.
-        /// For ASP.NET Core 3.1+ it's recommended to use <see cref="DefaultModulosServiceProviderFactory"/>.
+        /// For ASP.NET Core 3.1+ it's recommended to use <see cref="ModulosServiceProviderFactory"/>.
         /// </summary>
         /// <param name="services">IServiceCollection instance.</param>
         /// <param name="modulos">Instance of modulos application</param>
@@ -39,8 +40,9 @@ namespace Modulos
             ModulosApp modulos,
             params object[] additionalData)
         {
-            var factory = new DefaultModulosServiceProviderFactory(modulos, services, null, additionalData);
-            return factory.CreateBuilder(services).Collection;
+            var factory = new ModulosServiceProviderFactory(modulos, null, additionalData);
+            factory.CreateBuilder(services);
+            return services;
         }
 
 

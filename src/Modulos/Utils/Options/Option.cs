@@ -7,15 +7,15 @@ namespace Modulos
 {
     public abstract class OptionBase<T> : IOption<T>, IEquatable<OptionBase<T>>, IDisposable
     {
-        private readonly ReaderWriterLockSlim locker;
-        private T value;
-        private readonly bool threadSafe;
+        private readonly ReaderWriterLockSlim _locker;
+        private T _value;
+        private readonly bool _threadSafe;
 
         protected OptionBase(bool threadSafe)
         {
-            this.threadSafe = threadSafe;
+            _threadSafe = threadSafe;
             if (threadSafe)
-                locker = new ReaderWriterLockSlim();
+                _locker = new ReaderWriterLockSlim();
 
             Initialize(); //ye...i know
         }
@@ -26,35 +26,35 @@ namespace Modulos
         {
             get
             {
-                if (!threadSafe)
-                    return value;
+                if (!_threadSafe)
+                    return _value;
 
-                locker.EnterReadLock();
+                _locker.EnterReadLock();
                 try
                 {
-                    return value;
+                    return _value;
                 }
                 finally
                 {
-                    locker.ExitReadLock();
+                    _locker.ExitReadLock();
                 }
             }
             set
             {
-                if (!threadSafe)
+                if (!_threadSafe)
                 {
-                    this.value = value;
+                    _value = value;
                     return;
                 }
 
-                locker.EnterWriteLock();
+                _locker.EnterWriteLock();
                 try
                 {
-                    this.value = value;
+                    _value = value;
                 }
                 finally
                 {
-                    locker.ExitWriteLock();
+                    _locker.ExitWriteLock();
                 }
             }
         }
@@ -71,8 +71,8 @@ namespace Modulos
 
         public void Dispose()
         {
-            if (threadSafe)
-                locker.Dispose();
+            if (_threadSafe)
+                _locker.Dispose();
         }
 
 

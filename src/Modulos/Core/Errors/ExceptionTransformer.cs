@@ -7,7 +7,7 @@ namespace Modulos.Errors
 {
     internal class ExceptionTransformer : IExceptionTransformer
     {
-        private readonly Dictionary<string, Type> knownExceptions = new Dictionary<string, Type>();
+        private readonly Dictionary<string, Type> _knownExceptions = new Dictionary<string, Type>();
 
         [SuppressMessage("ReSharper", "UnusedMember.Global")]
         public ExceptionTransformer(IAssemblyExplorer assemblyExplorer)
@@ -32,16 +32,16 @@ namespace Modulos.Errors
                         modulosException = (ModulosException)Activator.CreateInstance(type, string.Empty);
                     }
 
-                    knownExceptions.Add(modulosException.Code, type);
+                    _knownExceptions.Add(modulosException.Code, type);
                 }
             }
         }
 
         public bool ToModulosException(string code, string message, out ModulosException modulosException)
         {
-            if (knownExceptions.ContainsKey(code))
+            if (_knownExceptions.ContainsKey(code))
             {
-                var exceptionType = knownExceptions[code];
+                var exceptionType = _knownExceptions[code];
                 modulosException = Activator.CreateInstance(exceptionType, message) as ModulosException;
                 return true;
             }

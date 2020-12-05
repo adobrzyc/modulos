@@ -7,13 +7,17 @@ namespace Modulos
     /// Used to unify installation 'modulos' for .net core 3.1+ environments.
     /// May be used to register modulos app in .net 3.1+ environments.
     /// </summary>
-    internal sealed class DefaultModulosServiceProviderFactory : ModulosServiceProviderFactory<FakeBuilder>
+    public class ModulosServiceProviderFactory : ModulosServiceProviderFactoryBase<FakeBuilder>
     {
-        public DefaultModulosServiceProviderFactory(
-            ModulosApp modulos,
-            IServiceCollection collection,
+        /// <summary>
+        /// Register modulos dependencies and executes defined DI modules.
+        /// </summary>
+        /// <param name="modulos">Instance of modulos app.</param>
+        /// <param name="modifier"></param>
+        /// <param name="parameters"></param>
+        public ModulosServiceProviderFactory(ModulosApp modulos,
             Action<AutoRegistrationModule> modifier = null, params object[] parameters) 
-            : base(modulos, ()=> new FakeBuilder(collection), modifier, parameters)
+            : base(modulos, collection => new FakeBuilder(collection), modifier, parameters)
         {
         }
         

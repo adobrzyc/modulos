@@ -17,12 +17,12 @@ namespace Modulos.Pipes
     {
         private static readonly ConcurrentDictionary<Type, ObjectActivator> activators = new ConcurrentDictionary<Type, ObjectActivator>();
 
-        private readonly IServiceProvider serviceProvider;
-        private readonly List<Type> pipes = new List<Type>();
+        private readonly IServiceProvider _serviceProvider;
+        private readonly List<Type> _pipes = new List<Type>();
 
         public Pipeline(IServiceProvider serviceProvider)
         {
-            this.serviceProvider = serviceProvider;
+            _serviceProvider = serviceProvider;
         }
 
         public Pipeline()
@@ -39,7 +39,7 @@ namespace Modulos.Pipes
         {
             ThrowIfWrongPipeType(pipeType);
             ThrowIfAlreadyExists(pipeType);
-            pipes.Add(pipeType);
+            _pipes.Add(pipeType);
         }
 
         public bool Remove<T>() where T : IPipe
@@ -50,7 +50,7 @@ namespace Modulos.Pipes
         public bool Remove(Type pipeType) 
         {
             ThrowIfWrongPipeType(pipeType);
-            return pipes.Remove(pipeType);
+            return _pipes.Remove(pipeType);
         }
 
         public void Insert<TPipeToFind, TPipeToInsert>(InsertMode mode)
@@ -66,16 +66,16 @@ namespace Modulos.Pipes
             ThrowIfWrongPipeType(pipeToInsert);
 
             ThrowIfAlreadyExists(pipeToInsert);
-            var indexOf = pipes.IndexOf(pipeToFind);
+            var indexOf = _pipes.IndexOf(pipeToFind);
             if(indexOf < 0)
                 throw new ArgumentException($"Pipe does not exists: {pipeToFind.Name}.");
             switch (mode)
             {
                 case InsertMode.After:
-                    pipes.Insert(indexOf + 1, pipeToInsert);
+                    _pipes.Insert(indexOf + 1, pipeToInsert);
                     break;
                 case InsertMode.Before:
-                    pipes.Insert(indexOf, pipeToInsert);
+                    _pipes.Insert(indexOf, pipeToInsert);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
@@ -92,15 +92,15 @@ namespace Modulos.Pipes
         {
             ThrowIfWrongPipeType(pipeType);
 
-            var index = pipes.IndexOf(pipeType);
+            var index = _pipes.IndexOf(pipeType);
             if (index < 0)
             {
                 Add(pipeType);
                 return;
             }
 
-            pipes.Insert(index + 1, pipeType);
-            pipes.RemoveAt(index);
+            _pipes.Insert(index + 1, pipeType);
+            _pipes.RemoveAt(index);
         } 
 
         public void TryRemoveAndAdd<T>() where T : IPipe
@@ -112,10 +112,10 @@ namespace Modulos.Pipes
         {
             ThrowIfWrongPipeType(pipeType);
 
-            var index = pipes.IndexOf(pipeType);
+            var index = _pipes.IndexOf(pipeType);
             if (index >= 0)
             {
-                pipes.RemoveAt(index);
+                _pipes.RemoveAt(index);
             }
             Add(pipeType);
         }
@@ -129,19 +129,19 @@ namespace Modulos.Pipes
         {
             ThrowIfWrongPipeType(pipeType);
 
-            return pipes.IndexOf(pipeType);
+            return _pipes.IndexOf(pipeType);
         }
 
 
 
         public IEnumerable<Type> GetPipes()
         {
-            return pipes.AsReadOnly();
+            return _pipes.AsReadOnly();
         }
 
         public IEnumerator<Type> GetEnumerator()
         {
-            return pipes.GetEnumerator();
+            return _pipes.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
@@ -154,7 +154,7 @@ namespace Modulos.Pipes
             var optionalPipes = new List<Type>();
             var references = new List<object>(additionalReferences);
 
-            foreach (var pipeType in pipes)
+            foreach (var pipeType in _pipes)
             {
                 var breakBecauseOptional = false;
                 foreach (var optionalPipe in optionalPipes)
@@ -262,12 +262,12 @@ namespace Modulos.Pipes
 
                 if ((paramInfo.Attributes & ParameterAttributes.Optional) != 0)
                 {
-                    var value = serviceProvider?.GetService(paramInfo.ParameterType);
+                    var value = _serviceProvider?.GetService(paramInfo.ParameterType);
                     parameters.Add(value);
                 }
                 else
                 {
-                    if (serviceProvider == null)
+                    if (_serviceProvider == null)
                     {
                         if (typeof(IOptionalPipe).IsAssignableFrom(typeToResolve))
                             return new ResolvePipeResult(false, null);
@@ -281,7 +281,7 @@ namespace Modulos.Pipes
 
                     try
                     {
-                        var value = serviceProvider.GetRequiredService(paramInfo.ParameterType);
+                        var value = _serviceProvider.GetRequiredService(paramInfo.ParameterType);
                         parameters.Add(value);
                     }
                     catch (Exception e)
@@ -310,7 +310,7 @@ namespace Modulos.Pipes
 
         private void ThrowIfAlreadyExists(Type pipeType)
         {
-            if (pipes.Contains(pipeType))
+            if (_pipes.Contains(pipeType))
                 throw new ArgumentException($"Pipe already exists.", pipeType.Name);
         }
 

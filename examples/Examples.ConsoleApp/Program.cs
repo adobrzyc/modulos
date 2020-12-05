@@ -12,8 +12,6 @@ namespace Examples.ConsoleApp
         {
             // 1. initialize
             var modulosApp = new ModulosApp();
-       
-            modulosApp.UseNetCore();
             var iniResult = modulosApp.Initialize<Program>();
 
 
@@ -31,7 +29,4 @@ namespace Examples.ConsoleApp
             modulosApp.Configure(sp);
         }
     }
-
-
-
 }

@@ -6,51 +6,51 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Modulos
 {
-    public abstract class ModulosServiceProviderFactory<TBuilder> : IServiceProviderFactory<TBuilder>
+    public abstract class ModulosServiceProviderFactoryBase<TBuilder> : IServiceProviderFactory<TBuilder>
     {
-        private readonly ModulosApp modulos;
-        private readonly Func<TBuilder> builderFactory;
-        private readonly Action<AutoRegistrationModule> modifier;
-        private readonly IDictionary<Type, object> parameters;
+        private readonly ModulosApp _modulos;
+        private readonly Func<IServiceCollection, TBuilder> _builderFactory;
+        private readonly Action<AutoRegistrationModule> _modifier;
+        private readonly IDictionary<Type, object> _parameters;
 
-        protected ModulosServiceProviderFactory(ModulosApp modulos, 
-            Func<TBuilder> builderFactory,
+        protected ModulosServiceProviderFactoryBase(ModulosApp modulos, 
+            Func<IServiceCollection,TBuilder> builderFactory,
             Action<AutoRegistrationModule> modifier = null, 
             params object[] parameters)
         {
-            this.modulos = modulos;
-            this.builderFactory = builderFactory ?? throw new ArgumentNullException(nameof(builderFactory));
-            this.modifier = modifier;
-            this.parameters = parameters?.ToDictionary
+            _modulos = modulos;
+            _builderFactory = builderFactory;
+            _modifier = modifier;
+            _parameters = parameters?.ToDictionary
             (
                 e=>e.GetType(),
                 e=>e
             ) ?? new Dictionary<Type, object>();
 
-            if (!this.parameters.ContainsKey(typeof(IAppInfo)))
+            if (!_parameters.ContainsKey(typeof(IAppInfo)))
             {
-                this.parameters.Add(typeof(IAppInfo), modulos.AppInfo);
+                _parameters.Add(typeof(IAppInfo), modulos.AppInfo);
             }
 
-            if (!this.parameters.ContainsKey(typeof(Assembly[])))
+            if (!_parameters.ContainsKey(typeof(Assembly[])))
             {
-                this.parameters.Add(typeof(Assembly[]), modulos.Assemblies);
+                _parameters.Add(typeof(Assembly[]), modulos.Assemblies);
             }
 
-            if (!this.parameters.ContainsKey(typeof(IAssemblyExplorer)))
+            if (!_parameters.ContainsKey(typeof(IAssemblyExplorer)))
             {
                 var assemblyExplorer = new AssemblyExplorer
                 (
-                    (Assembly[])this.parameters[typeof(Assembly[])]
+                    (Assembly[])_parameters[typeof(Assembly[])]
                 );
 
-                this.parameters.Add(typeof(IAssemblyExplorer), assemblyExplorer);
+                _parameters.Add(typeof(IAssemblyExplorer), assemblyExplorer);
             }
 
-            if (!this.parameters.ContainsKey(typeof(ITypeExplorer)))
+            if (!_parameters.ContainsKey(typeof(ITypeExplorer)))
             {
-                var assemblyExplorer = (IAssemblyExplorer)this.parameters[typeof(IAssemblyExplorer)];
-                this.parameters.Add(typeof(ITypeExplorer),new TypeExplorer(assemblyExplorer));
+                var assemblyExplorer = (IAssemblyExplorer)_parameters[typeof(IAssemblyExplorer)];
+                _parameters.Add(typeof(ITypeExplorer),new TypeExplorer(assemblyExplorer));
             }
         }
 
@@ -60,17 +60,17 @@ namespace Modulos
 
         public TBuilder CreateBuilder(IServiceCollection services)
         {
-            var builder = builderFactory();
+            services.AddSingleton(_modulos);
+            var builder = _builderFactory(services);
 
-            services.AddSingleton(modulos);
-            Populate(builder,services);
+            Populate(builder, services);
 
-            var assemblies = modulos.Assemblies.ToArray();
+            var assemblies = _modulos.Assemblies.ToArray();
 
             var autoLoadModules = GetModules(assemblies)
                 .Select(e =>
                 {
-                    modifier?.Invoke(e);
+                    _modifier?.Invoke(e);
                     return e;
                 })
                 .Where(e => e.AutoLoad)
@@ -137,12 +137,12 @@ namespace Modulos
             var args = new List<object>();
             foreach (var paramInfo in ctor.GetParameters())
             {
-                var keyFromAdditional = parameters.Keys
+                var keyFromAdditional = _parameters.Keys
                     .FirstOrDefault(e => paramInfo.ParameterType.IsAssignableFrom(e));
 
                 if (keyFromAdditional != null)
                 {
-                    var paramFromAdditional = parameters[keyFromAdditional];
+                    var paramFromAdditional = _parameters[keyFromAdditional];
 
                     if (paramFromAdditional != null)
                     {

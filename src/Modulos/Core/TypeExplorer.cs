@@ -6,24 +6,24 @@ namespace Modulos
 {
     internal class TypeExplorer : ITypeExplorer
     {
-        private readonly Type[] classes;
-        private readonly Type[] interfaces;
-        private readonly Type[] types;
+        private readonly Type[] _classes;
+        private readonly Type[] _interfaces;
+        private readonly Type[] _types;
 
         public TypeExplorer(IAssemblyExplorer assemblyExplorer)
         {
-            types = assemblyExplorer.Assemblies
+            _types = assemblyExplorer.Assemblies
                 .SelectMany(a => a.GetExportedTypes())
                 .Where(type => type.IsPublic || type.IsNestedPublic)
                 .Where(e => e.GetCustomAttribute<SuppressAutoAttribute>() == null)
                 .ToArray();
 
-            classes = types
+            _classes = _types
                 .Where(type => !type.IsAbstract && type.IsClass)
                 .Where(e => e.GetCustomAttribute<SuppressAutoAttribute>() == null)
                 .ToArray();
 
-            interfaces = types
+            _interfaces = _types
                 .Where(type => type.IsInterface)
                 .Where(e => e.GetCustomAttribute<SuppressAutoAttribute>() == null)
                 .ToArray();
@@ -32,22 +32,22 @@ namespace Modulos
         public Type[] GetSearchableClasses(Func<Type, bool> filter = null)
         {
             return filter != null
-                ? classes.Where(filter).ToArray()
-                : classes.ToArray();
+                ? _classes.Where(filter).ToArray()
+                : _classes.ToArray();
         }
 
         public Type[] GetSearchableInterfaces(Func<Type, bool> filter = null)
         {
             return filter != null
-                ? interfaces.Where(filter).ToArray()
-                : interfaces.ToArray();
+                ? _interfaces.Where(filter).ToArray()
+                : _interfaces.ToArray();
         }
 
         public Type[] GetSearchableTypes(Func<Type, bool> filter = null)
         {
             return filter != null
-                ? types.Where(filter).ToArray()
-                : types.ToArray();
+                ? _types.Where(filter).ToArray()
+                : _types.ToArray();
         }
 
 

@@ -7,45 +7,45 @@ namespace Modulos.Pipes
 {
     public class PipelineResult : IPipelineResult
     {
-        private readonly IDictionary<Type, object> availableData = new Dictionary<Type, object>();
+        private readonly IDictionary<Type, object> _availableData = new Dictionary<Type, object>();
 
         public PipelineResult(IEnumerable<object> publishedData)
         {
             foreach (var data in publishedData)
             {
-                availableData.Add(data.GetType(), data);
+                _availableData.Add(data.GetType(), data);
             }
         }
 
         public T Get<T>()
         {
-            var key = availableData.Keys
+            var key = _availableData.Keys
                 .SingleOrDefault(e => typeof(T).IsAssignableFrom(e));
 
             if (key == null)
                throw new MissingDataFromPipelineResultException($"Unable to resolve: {typeof(T).FullName} for pipe: {GetType().FullName}");
 
-            return (T) availableData[key];
+            return (T) _availableData[key];
         }
 
         public T GetOptional<T>()
         {
-            var key = availableData.Keys
+            var key = _availableData.Keys
                 .SingleOrDefault(e => typeof(T).IsAssignableFrom(e));
        
             if (key == null)
                 return default;
-            return (T) availableData[key];
+            return (T) _availableData[key];
         }
 
         public object[] GetAll()
         {
-            return availableData.Values.ToArray();
+            return _availableData.Values.ToArray();
         }
 
         public async ValueTask DisposeAsync()
         {
-            foreach (var pair in availableData)
+            foreach (var pair in _availableData)
             {
                 if (pair.Value is IAsyncDisposable asyncDisposable)
                     await asyncDisposable.DisposeAsync().ConfigureAwait(false);
@@ -55,7 +55,7 @@ namespace Modulos.Pipes
                 }
             }
 
-            availableData.Clear();
+            _availableData.Clear();
         }
     }
 }

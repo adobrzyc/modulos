@@ -2,10 +2,10 @@ branches:
   only:
   - master
 
-version: '0.1.4.{build}'
+version: '0.1.5.{build}'
 
 dotnet_csproj:
-  version_prefix: '0.1.4'
+  version_prefix: '0.1.5'
   patch: true
   file: 'src\**\*.csproj'
 

@@ -61,9 +61,8 @@ namespace Modulos
         public TBuilder CreateBuilder(IServiceCollection services)
         {
             services.AddSingleton(_modulos);
-            var builder = _builderFactory(services);
 
-            Populate(builder, services);
+            var builder = _builderFactory(services);
 
             var assemblies = _modulos.Assemblies.ToArray();
 
@@ -76,6 +75,32 @@ namespace Modulos
                 .Where(e => e.AutoLoad)
                 .OrderBy(e => e.Order.GetHashCode())
                 .ToArray();
+
+
+            var microsoftModules = autoLoadModules.Where(e => e.Instance is IModule<IServiceCollection>)
+                .OrderBy(e => e.Order.GetHashCode());
+
+            foreach (var microsoft in microsoftModules)
+            {
+                var module = (IModule<IServiceCollection>) microsoft.Instance;
+                module.Load(services);
+            }
+
+            Populate(builder, services);
+
+            var customModules = autoLoadModules.Where(e => e.Instance is IModule<TBuilder>)
+                .OrderBy(e => e.Order.GetHashCode());
+
+            foreach (var custom in customModules)
+            {
+                var module = (IModule<TBuilder>) custom.Instance;
+                module.Load(builder);
+            }
+
+            /*
+            
+            This code is better for ordering, but it suffers from cutting possibility 
+            to use methods like TryAdd.
 
             foreach (var group in autoLoadModules.GroupBy(e => e.Order)
                 .OrderBy(e => e.Key.GetHashCode()))
@@ -90,7 +115,10 @@ namespace Modulos
                         switch (module.Instance)
                         {
                             case IModule<IServiceCollection> microsoft:
-                          
+                               
+                                //todo: consider to remove support for both modules in same time 
+                                //now it's impossible to use TryAdd... ;/ 
+
                                 var collection = new ServiceCollection();
                                 microsoft.Load(collection);
                                 Populate(builder, collection);
@@ -105,6 +133,7 @@ namespace Modulos
                     }
                 }
             }
+            */
 
             return builder;
         }

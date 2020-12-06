@@ -7,10 +7,6 @@ namespace Modulos
     /// </summary>
     public interface IModule
     {
-        /// <summary>
-        /// Defines order for modules with the same <see cref="Order"/>.
-        /// </summary>
-        int ModuleOrder { get; }
         LoadOrder Order { get; }
         bool AutoLoad { get; }
     }

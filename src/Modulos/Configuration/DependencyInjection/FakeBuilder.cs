@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Modulos
@@ -19,10 +18,12 @@ namespace Modulos
 
         public void Populate(IServiceCollection source)
         {
-            foreach (var serviceDescriptor in source.ToArray())
-            {
-                _collection.Add(serviceDescriptor);
-            }
+            // do nothing 
+
+            //foreach (var serviceDescriptor in source.ToArray())
+            //{
+            //    _collection.Add(serviceDescriptor);
+            //}
         }
 
         public IServiceProvider Build()

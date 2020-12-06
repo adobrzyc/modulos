@@ -69,6 +69,7 @@ namespace Modulos
         private readonly object _locker = new object();
         private AppInfo _appInfo;
         private Assembly[] _assemblies;
+        private Assembly[] _additionalAssemblies;
         private bool _initialized;
         private IPipeline _iniPipeline;
         private IPipeline _configPipeline;
@@ -155,7 +156,13 @@ namespace Modulos
             {
                 if (_assemblies == null)
                     ExploreAssemblies();
-
+                if (_additionalAssemblies != null)
+                {
+                    var list = _assemblies.ToList();
+                    list.AddRange(_additionalAssemblies);
+                    _assemblies = list.Distinct().ToArray();
+                }
+                    
                 localAssemblies = _assemblies;
             }
 
@@ -253,9 +260,26 @@ namespace Modulos
 
             lock (_locker)
             {
-                _assemblies = assemblies.ToArray();
+                _assemblies = assemblies;
+            }
+        }
+
+        /// <summary>
+        /// Adds additional assemblies to explored via modulos.
+        /// </summary>
+        /// <param name="assemblies">Assemblies to add.</param>
+        public void AddAssemblies(Assembly[] assemblies)
+        {
+            lock (_locker)
+            {
+                if (_initialized)
+                    throw new InvalidOperationException("Can not call this method after initialization.");
             }
 
+            lock (_locker)
+            {
+                _additionalAssemblies = assemblies.ToArray();
+            }
         }
 
         public void Dispose()

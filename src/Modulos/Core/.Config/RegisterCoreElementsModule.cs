@@ -1,11 +1,9 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 // ReSharper disable UnusedType.Global
 
 namespace Modulos.Config
 {
-    [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public class RegisterCoreElementsModule : MicrosoftDiModule
     {
         private readonly IAssemblyExplorer _assemblyExplorer;

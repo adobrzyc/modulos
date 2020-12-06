@@ -91,6 +91,13 @@ namespace Modulos
                 if (_assemblies == null)
                     ExploreAssemblies();
 
+                if (_additionalAssemblies != null)
+                {
+                    var list = _assemblies.ToList();
+                    list.AddRange(_additionalAssemblies);
+                    _assemblies = list.Distinct().ToArray();
+                }
+                    
                 localAssemblies = _assemblies;
             }
 
@@ -151,19 +158,10 @@ namespace Modulos
             if (serviceProvider == null) throw new ArgumentNullException(nameof(serviceProvider));
             if (updatePipeline == null) throw new ArgumentNullException(nameof(updatePipeline));
 
-            Assembly[] localAssemblies;
             lock (_locker)
             {
-                if (_assemblies == null)
-                    ExploreAssemblies();
-                if (_additionalAssemblies != null)
-                {
-                    var list = _assemblies.ToList();
-                    list.AddRange(_additionalAssemblies);
-                    _assemblies = list.Distinct().ToArray();
-                }
-                    
-                localAssemblies = _assemblies;
+                if (_initialized)
+                    throw new InvalidOperationException("Can not call this method before initialization.");
             }
 
             using var scope = serviceProvider.CreateScope();
@@ -171,7 +169,8 @@ namespace Modulos
                 _configPipeline = new Pipeline(scope.ServiceProvider);
                 _configPipeline.Add<Configuration.Begin>();
 
-                var typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
+
+                var typeExplorer = serviceProvider.GetRequiredService<ITypeExplorer>();
                 var updaters = typeExplorer.GetSearchableClasses<IUpdateConfigPipeline>()
                     .Select(Activator.CreateInstance)
                     .Cast<IUpdateConfigPipeline>().ToArray();
@@ -182,14 +181,6 @@ namespace Modulos
                 }
 
                 var parameters = additionalParameters.ToList();
-                if(!parameters.Any(e=>e is IAppInfo))
-                    parameters.Add(_appInfo);
-                if(!parameters.Any(e=>e is Assembly[]))
-                    parameters.Add(localAssemblies);
-                if(!parameters.Any(e=>e is ITypeExplorer))
-                    parameters.Add(typeExplorer);
-                if(!parameters.Any(e=>e is IAssemblyExplorer))
-                    parameters.Add(new AssemblyExplorer(localAssemblies));
 
                 return _configResult = _configPipeline.Execute(CancellationToken.None, 
                         parameters.ToArray())

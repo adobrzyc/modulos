@@ -9,23 +9,23 @@ namespace Modulos
 {
     internal static class InitializationHelper
     {
-        private const string AditoSelector = "Modulos";
+        private const string Selector = "Modulos";
 
         public static bool IsModulosAssembly(AssemblyName asm)
         {
-            return asm.FullName.StartsWith(AditoSelector);
+            return asm.FullName.StartsWith(Selector);
         }
 
         public static bool IsModulosAssembly(Assembly asm)
         {
-            return asm.FullName.StartsWith(AditoSelector) 
-                   || asm.GetReferencedAssemblies().Any(e => e.FullName.StartsWith(AditoSelector));
+            return asm.FullName.StartsWith(Selector) 
+                   || asm.GetReferencedAssemblies().Any(e => e.FullName.StartsWith(Selector));
         }
 
         public static bool IsModulosAssembly(Library compilationLibrary)
         {
-            return compilationLibrary.Name == AditoSelector
-                   || compilationLibrary.Dependencies.Any(d => d.Name.StartsWith(AditoSelector));
+            return compilationLibrary.Name == Selector
+                   || compilationLibrary.Dependencies.Any(d => d.Name.StartsWith(Selector));
         }
 
         public static AppInfo GetAppInfoFromAssembly(Assembly assembly)

@@ -160,7 +160,7 @@ namespace Modulos
 
             lock (_locker)
             {
-                if (_initialized)
+                if (!_initialized)
                     throw new InvalidOperationException("Can not call this method before initialization.");
             }
 

@@ -101,7 +101,7 @@ namespace Modulos
                 localAssemblies = _assemblies;
             }
 
-            _appInfo = InitializationHelper.GetAppInfoFromAssembly(typeof(TClassInProject).Assembly);
+            _appInfo = GetAppInfoFromAssembly(typeof(TClassInProject).Assembly);
 
             var typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
             
@@ -189,52 +189,15 @@ namespace Modulos
         }
 
 
-        private void ExploreAssemblies(Predicate<Assembly> predicate = null)
+
+        public static bool IsExcludedAssemblyName(string name)
         {
-            lock (_locker)
-            {
-                if (_initialized)
-                    throw new InvalidOperationException("Can not call this method after initialization.");
-            }
-
-            var result = new List<Assembly>();
-            var dependencies = DependencyContext.Default?.RuntimeLibraries;
-
-            if (dependencies != null)
-            {
-                foreach (var library in dependencies)
-                {
-                    if (!InitializationHelper.IsModulosAssembly(library)) continue;
-                    foreach (var assemblyName in library.GetDefaultAssemblyNames(DependencyContext.Default))
-                    {
-                        var assembly = Assembly.Load(assemblyName);
-                        if(predicate == null || predicate(assembly))
-                            result.Add(assembly);
-                    }
-                }
-
-                lock (_locker)
-                {
-                    _assemblies = result.ToArray();
-                }
-            }
-            else
-            {
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(e => predicate == null || predicate(e)).ToArray();
-
-                foreach (var library in assemblies)
-                {
-                    if (!InitializationHelper.IsModulosAssembly(library)) continue;
-
-                    result.Add(library);
-                }
-
-                lock (_locker)
-                {
-                    _assemblies = result.ToArray();
-                }
-            }
+            return name.StartsWith("Microsoft.")
+                   || name.StartsWith("System.")
+                   || name == "System"
+                   || name == "WindowsBase"
+                   || name == "mscorlib"
+                   || name == "netstandard";
         }
 
         /// <summary>
@@ -277,6 +240,138 @@ namespace Modulos
         {
             _iniResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
             _configResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+
+        private void ExploreAssemblies(Predicate<Assembly> predicate = null)
+        {
+            lock (_locker)
+            {
+                if (_initialized)
+                    throw new InvalidOperationException("Can not call this method after initialization.");
+            }
+
+            var result = new List<Assembly>();
+
+            var names = DependencyContext.Default?
+                .GetDefaultAssemblyNames()
+                .Select(e => e.Name).Where(e => !IsExcludedAssemblyName(e))
+                .ToArray();
+
+
+            if (names != null)
+            {
+                foreach (var name in names)
+                {
+                    result.AddRange
+                    (
+                        ExploreModulosAssemblies(Assembly.Load(name))
+                            .Where(e=>predicate == null || predicate(e))
+                    );
+                }
+
+                lock (_locker)
+                {
+                    _assemblies = result.Distinct().ToArray();
+                }
+            }
+            else
+            {
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(e=>!IsExcludedAssemblyName(e.GetName().Name))
+                    .Where(e => predicate == null || predicate(e))
+                    .ToArray();
+
+                foreach (var assembly in assemblies)
+                {
+                    result.AddRange
+                    (
+                        ExploreModulosAssemblies(assembly)
+                            .Where(e=>predicate == null || predicate(e))
+                    );
+                }
+
+                lock (_locker)
+                {
+                    _assemblies = result.Distinct().ToArray();
+                }
+            }
+        }
+
+        private static Assembly[] ExploreModulosAssemblies(Assembly asm)
+        {
+            var queue = new Queue<(Assembly asm, AssemblyNode parent)>();
+            var nodes = new Dictionary<string, AssemblyNode>();
+            var output = new Dictionary<Assembly, Assembly>();
+
+            (Assembly asm, AssemblyNode parent) element = (asm, null);
+
+            while (true)
+            {
+                if (!nodes.ContainsKey(element.asm.FullName))
+                {
+                    var node = new AssemblyNode
+                    {
+                        IsModulos = element.asm.FullName.StartsWith("Modulos"),
+                        Parent = element.parent,
+                        Assembly = element.asm
+                    };
+
+                    nodes.Add(element.asm.FullName, node);
+
+                    foreach (var child in asm.GetReferencedAssemblies())
+                    {
+                        if (IsExcludedAssemblyName(child.Name))
+                            continue;
+
+                        if (!nodes.ContainsKey(child.FullName))
+                        {
+                            var loaded = Assembly.Load(child);
+                            queue.Enqueue((loaded, node));
+                        }
+                    }
+                }
+
+                if (queue.Count <= 0)
+                    break;
+
+                element = queue.Dequeue();
+
+            }
+
+            foreach (var modulosNode in nodes.Values.Where(e => e.IsModulos))
+            {
+                var node = modulosNode;
+                do
+                {
+                    if (!output.ContainsKey(node.Assembly))
+                        output.Add(node.Assembly, node.Assembly);
+
+                    node = node.Parent;
+                }
+                while (node != null);
+            }
+
+            return output.Keys.ToArray();
+        }
+
+        private static AppInfo GetAppInfoFromAssembly(Assembly assembly)
+        {
+            return new AppInfo(new Guid(assembly.GetType().GUID.ToString()),
+                assembly.GetName().Name,
+                assembly.GetName().Version.ToString());
+        }
+
+        private class AssemblyNode
+        {
+            public AssemblyNode Parent { get; set; }
+            public Assembly Assembly { get; set; }
+            public bool IsModulos { get; set; }
+
+            public override string ToString()
+            {
+                return Assembly.GetName().Name;
+            }
         }
     }
 }

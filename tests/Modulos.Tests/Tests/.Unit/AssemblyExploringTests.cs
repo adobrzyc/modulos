@@ -1,18 +1,16 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Linq;
+﻿using System.Linq;
 using FluentAssertions;
 using Xunit;
 
 namespace Modulos.Tests.Unit
 {
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class AssemblyExploringTests
     {
         [Fact]
         public void RegisterAssembliesForNetCoreApp_register_affected_by_adito_hydra_core()
         {
-            var hydra = new ModulosApp();
-            hydra.Initialize<AssemblyExploringTests>();
+            var modulos = new ModulosApp();
+            modulos.Initialize<AssemblyExploringTests>();
 
             var suspectedAssemblies = new[]
             {
@@ -20,7 +18,7 @@ namespace Modulos.Tests.Unit
                 "Modulos"
             };
 
-            hydra.Assemblies.Select(e => e.GetName().Name)
+            modulos.Assemblies.Select(e => e.GetName().Name)
                 .Should()
                 .Contain(suspectedAssemblies);
         }

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 
+// ReSharper disable UnusedParameter.Global
+
 namespace Modulos
 {
     public abstract class ModulosServiceProviderFactoryBase<TBuilder> : IServiceProviderFactory<TBuilder>
@@ -88,14 +90,18 @@ namespace Modulos
 
             Populate(builder, services);
 
-            var customModules = autoLoadModules.Where(e => e.Instance is IModule<TBuilder>)
-                .OrderBy(e => e.Order.GetHashCode());
-
-            foreach (var custom in customModules)
+            if (!typeof(IServiceCollection).IsAssignableFrom(typeof(TBuilder)))
             {
-                var module = (IModule<TBuilder>) custom.Instance;
-                module.Load(builder);
+                var customModules = autoLoadModules.Where(e => e.Instance is IModule<TBuilder>)
+                    .OrderBy(e => e.Order.GetHashCode());
+
+                foreach (var custom in customModules)
+                {
+                    var module = (IModule<TBuilder>) custom.Instance;
+                    module.Load(builder);
+                }
             }
+          
 
             /*
             

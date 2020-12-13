@@ -76,13 +76,18 @@ namespace Modulos
         private IPipelineResult _iniResult;
         private IPipelineResult _configResult;
 
-        public IPipelineResult Initialize<TClassInProject>(params object[] additionalParameters) where TClassInProject : class
+        public IPipelineResult Initialize(params object[] additionalParameters)
         {
-            return Initialize<TClassInProject>(pipeline => { }, additionalParameters);
+            return Initialize(Assembly.GetEntryAssembly(), pipeline => { }, additionalParameters);
         }
 
-        public IPipelineResult Initialize<TClassInProject>(Action<IPipeline> updatePipeline, 
-            params object[] additionalParameters) where TClassInProject : class
+        public IPipelineResult Initialize(Assembly mainAssembly, params object[] additionalParameters)
+        {
+            return Initialize(mainAssembly, pipeline => { }, additionalParameters);
+        }
+
+        public IPipelineResult Initialize(Assembly mainAssembly, Action<IPipeline> updatePipeline, 
+            params object[] additionalParameters)
         {
             if (updatePipeline == null) throw new ArgumentNullException(nameof(updatePipeline));
             Assembly[] localAssemblies;
@@ -101,7 +106,7 @@ namespace Modulos
                 localAssemblies = _assemblies;
             }
 
-            _appInfo = GetAppInfoFromAssembly(typeof(TClassInProject).Assembly);
+            _appInfo = GetAppInfoFromAssembly(mainAssembly);
 
             var typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
             

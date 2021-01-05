@@ -12,7 +12,7 @@ namespace Examples.ConsoleApp
         {
             // 1. initialize
             var modulosApp = new ModulosApp();
-            var iniResult = modulosApp.Initialize<Program>();
+            var iniResult = modulosApp.Initialize();
 
 
             // 2. organize dependency injection 

@@ -1,12 +1,10 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Serialization;
 
 namespace Modulos
 {
     [DataContract]
-    [SuppressMessage("ReSharper", "AutoPropertyCanBeMadeGetOnly.Local")]
     public struct TypeInfo : IEquatable<TypeInfo>
     {
         public static readonly TypeInfo Empty = new TypeInfo
@@ -16,7 +14,6 @@ namespace Modulos
             TypeDefinition =  null,
             TypeName = null
         };
-
 
         /// <summary>
         /// Defines mark of a type, unique at application level. Used to find type based on
@@ -42,6 +39,9 @@ namespace Modulos
         /// </summary>
         [DataMember]
         public bool IsAnonymous { get; private set; }
+
+        public string Representation => TypeMark ?? TypeDefinition ?? TypeName;
+
 
         /// <summary>
         /// Create new instance of class.
@@ -73,6 +73,7 @@ namespace Modulos
             }
         }
 
+        
         private void Create(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
@@ -142,7 +143,7 @@ namespace Modulos
 
         public override string ToString()
         {
-            return TypeName ?? TypeDefinition ?? TypeMark ?? "unknown";
+            return Representation;
         }
     }
 }

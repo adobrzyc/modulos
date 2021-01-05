@@ -153,10 +153,9 @@ namespace Modulos.Pipes
         {
             var optionalPipes = new List<Type>();
             var references = new List<object>(additionalReferences);
-
+            var executedPipes = new List<IPipe>();
             foreach (var pipeType in _pipes)
             {
-                var breakBecauseOptional = false;
                 foreach (var optionalPipe in optionalPipes)
                 {
                     var resolveOptionalResult = ResolvePipe(optionalPipe, references.ToArray());
@@ -165,23 +164,35 @@ namespace Modulos.Pipes
 
                     var optional = resolveOptionalResult.Pipe;
                     references.Add(optional);
-                    var optionalResult = await optional.Execute(cancellationToken);
-                    references.AddRange(optionalResult.PublishedData);
 
-                    switch (optionalResult.Action)
+                    try
                     {
-                        case PipeActionAfterExecute.Continue:
-                            continue;
-                        case PipeActionAfterExecute.Break:
-                            breakBecauseOptional = true;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
+                        executedPipes.Add(optional);
+
+                        var optionalResult = await optional.Execute(cancellationToken).ConfigureAwait(false);
+                        references.AddRange(optionalResult.PublishedData);
+
+                        switch (optionalResult.Action)
+                        {
+                            case PipeActionAfterExecute.Continue:
+                                continue;
+                            case PipeActionAfterExecute.Break:
+                                return new PipelineResult(references);
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    catch (Exception error)
+                    {
+                        executedPipes.Reverse();
+                        foreach (var pipe in executedPipes)
+                        {
+                            if (pipe is IPipeWithExceptionHandling pipeWithExceptionHandling)
+                                await pipeWithExceptionHandling.WhenError(error, cancellationToken).ConfigureAwait(false);
+                        }
+                        throw;
                     }
                 }
-
-                if (breakBecauseOptional)
-                    break;
 
                 var resolveResult = ResolvePipe(pipeType, references.ToArray());
                
@@ -193,21 +204,34 @@ namespace Modulos.Pipes
 
                 var instance = resolveResult.Pipe;
                 references.Add(instance);
-                var result = await instance.Execute(cancellationToken);
 
-                references.AddRange(result.PublishedData);
-
-                switch (result.Action)
+                try
                 {
-                    case PipeActionAfterExecute.Continue:
-                        continue;
-                    case PipeActionAfterExecute.Break:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                    executedPipes.Add(instance);
+                    var result = await instance.Execute(cancellationToken).ConfigureAwait(false);
+                    references.AddRange(result.PublishedData);
 
-                return new PipelineResult(references);
+                    switch (result.Action)
+                    {
+                        case PipeActionAfterExecute.Continue:
+                            continue;
+                        case PipeActionAfterExecute.Break:
+                            return new PipelineResult(references);
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                   
+                }
+                catch (Exception error)
+                {
+                    executedPipes.Reverse();
+                    foreach (var pipe in executedPipes)
+                    {
+                        if (pipe is IPipeWithExceptionHandling pipeWithExceptionHandling)
+                            await pipeWithExceptionHandling.WhenError(error, cancellationToken).ConfigureAwait(false);
+                    }
+                    throw;
+                }
             }
 
             return new PipelineResult(references);
@@ -226,7 +250,7 @@ namespace Modulos.Pipes
             }
         }
 
-        private ResolvePipeResult ResolvePipe(Type typeToResolve,  params object[] additionalData)
+        private ResolvePipeResult ResolvePipe(Type typeToResolve, params object[] additionalData)
         {
             var ctor = typeToResolve.GetConstructors()
                 .Select(e => (ctor: e, count: e.GetParameters().Length))
@@ -262,7 +286,10 @@ namespace Modulos.Pipes
 
                 if ((paramInfo.Attributes & ParameterAttributes.Optional) != 0)
                 {
-                    var value = _serviceProvider?.GetService(paramInfo.ParameterType);
+                    // checked: GetService will return null for non-registered types, even for value types
+                    var value = _serviceProvider?.GetService(paramInfo.ParameterType) 
+                                ?? paramInfo.ParameterType.GetDefault(); 
+
                     parameters.Add(value);
                 }
                 else

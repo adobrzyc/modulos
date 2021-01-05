@@ -15,7 +15,7 @@ namespace Examples.AspNetCoreApp
         private readonly ModulosApp modulos = new ModulosApp();
         public Startup(IConfiguration configuration)
         {
-            modulos.Initialize<Startup>(configuration);
+            modulos.Initialize(configuration);
             Configuration = configuration;
         }
 

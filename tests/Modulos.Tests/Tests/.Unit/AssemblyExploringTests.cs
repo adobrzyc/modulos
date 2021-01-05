@@ -10,7 +10,7 @@ namespace Modulos.Tests.Unit
         public void RegisterAssembliesForNetCoreApp_register_affected_by_adito_hydra_core()
         {
             var modulos = new ModulosApp();
-            modulos.Initialize<AssemblyExploringTests>();
+            modulos.Initialize();
 
             var suspectedAssemblies = new[]
             {

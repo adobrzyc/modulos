@@ -39,7 +39,7 @@ namespace Examples.Blazor.WebAssembly
             }
 
             var modulosApp = new ModulosApp();
-            modulosApp.Initialize<Program>();
+            modulosApp.Initialize();
             
             builder.ConfigureContainer(new FactoryForBlazor(modulosApp), collection => {});
 

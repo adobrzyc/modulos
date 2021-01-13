@@ -15,10 +15,10 @@ namespace Modulos.Pipes
 {
     public class Pipeline : IPipeline
     {
-        private static readonly ConcurrentDictionary<Type, ObjectActivator> activators = new ConcurrentDictionary<Type, ObjectActivator>();
+        private static readonly ConcurrentDictionary<Type, ObjectActivator> activators = new();
 
         private readonly IServiceProvider _serviceProvider;
-        private readonly List<Type> _pipes = new List<Type>();
+        private readonly List<Type> _pipes = new();
 
         public Pipeline(IServiceProvider serviceProvider)
         {
@@ -258,13 +258,13 @@ namespace Modulos.Pipes
                 .Select(e => e.ctor)
                 .First();
 
-            var @params = new Dictionary<Type,object>();
+            var @params = new Dictionary<Type, object>();
             foreach (var data in additionalData)
             {
                 var key = data.GetType();
                 if (@params.ContainsKey(key))
                     @params[key] = data;
-                else @params.Add(key,data);
+                else @params.Add(key, data);
             }
 
             var parameters = new List<object>();
@@ -287,8 +287,8 @@ namespace Modulos.Pipes
                 if ((paramInfo.Attributes & ParameterAttributes.Optional) != 0)
                 {
                     // checked: GetService will return null for non-registered types, even for value types
-                    var value = _serviceProvider?.GetService(paramInfo.ParameterType) 
-                                ?? paramInfo.ParameterType.GetDefault(); 
+                    var value = _serviceProvider?.GetService(paramInfo.ParameterType)
+                                ?? paramInfo.ParameterType.GetDefault();
 
                     parameters.Add(value);
                 }
@@ -332,7 +332,7 @@ namespace Modulos.Pipes
             }
 
             var pipe = (IPipe) activator(parameters.ToArray());
-            return new ResolvePipeResult(true,pipe);
+            return new ResolvePipeResult(true, pipe);
         }
 
         private void ThrowIfAlreadyExists(Type pipeType)

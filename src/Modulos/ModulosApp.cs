@@ -71,10 +71,22 @@ namespace Modulos
         private Assembly[] _assemblies;
         private Assembly[] _additionalAssemblies;
         private bool _initialized;
+        private bool _configured;
         private IPipeline _iniPipeline;
         private IPipeline _configPipeline;
         private IPipelineResult _iniResult;
         private IPipelineResult _configResult;
+
+        public bool IsConfigured
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _configured;
+                }
+            }
+        }
 
         public IPipelineResult Initialize(params object[] additionalParameters)
         {
@@ -187,9 +199,15 @@ namespace Modulos
 
                 var parameters = additionalParameters.ToList();
 
-                return _configResult = _configPipeline.Execute(CancellationToken.None, 
+                var result = _configResult = _configPipeline.Execute(CancellationToken.None, 
                         parameters.ToArray())
                     .GetAwaiter().GetResult();
+
+                lock (_locker)
+                {
+                    _configured = true;
+                }
+                return result;
             }
         }
 

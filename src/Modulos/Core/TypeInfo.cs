@@ -42,7 +42,6 @@ namespace Modulos
 
         public string Representation => TypeMark ?? TypeDefinition ?? TypeName;
 
-
         /// <summary>
         /// Create new instance of class.
         /// </summary>

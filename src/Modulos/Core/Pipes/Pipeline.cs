@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Modulos.Pipes
 {
+    // todo: [L0] handle disposable pipe
     public class Pipeline : IPipeline
     {
         private static readonly ConcurrentDictionary<Type, ObjectActivator> activators = new();

@@ -1,24 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyModel;
-using Modulos.Pipes;
-
-// ReSharper disable ClassNeverInstantiated.Global
+﻿// ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Global
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace Modulos
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
+    using System.Threading;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.DependencyModel;
+    using Pipes;
+
     public sealed partial class ModulosApp : IDisposable
     {
+        private readonly object _locker = new();
+        private Assembly[] _additionalAssemblies;
+        private AppInfo _appInfo;
+        private Assembly[] _assemblies;
+        private IPipeline _configPipeline;
+        private IPipelineResult _configResult;
+        private bool _configured;
+        private IPipeline _iniPipeline;
+        private IPipelineResult _iniResult;
+        private bool _initialized;
+
         public Assembly[] Assemblies
         {
-            get 
+            get
             {
                 lock (_locker)
                 {
@@ -66,15 +77,22 @@ namespace Modulos
             }
         }
 
-        private readonly object _locker = new object();
-        private AppInfo _appInfo;
-        private Assembly[] _assemblies;
-        private Assembly[] _additionalAssemblies;
-        private bool _initialized;
-        private IPipeline _iniPipeline;
-        private IPipeline _configPipeline;
-        private IPipelineResult _iniResult;
-        private IPipelineResult _configResult;
+        public bool IsConfigured
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    return _configured;
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            _iniResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+            _configResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        }
 
         public IPipelineResult Initialize(params object[] additionalParameters)
         {
@@ -86,7 +104,7 @@ namespace Modulos
             return Initialize(mainAssembly, pipeline => { }, additionalParameters);
         }
 
-        public IPipelineResult Initialize(Assembly mainAssembly, Action<IPipeline> updatePipeline, 
+        public IPipelineResult Initialize(Assembly mainAssembly, Action<IPipeline> updatePipeline,
             params object[] additionalParameters)
         {
             if (updatePipeline == null) throw new ArgumentNullException(nameof(updatePipeline));
@@ -102,14 +120,14 @@ namespace Modulos
                     list.AddRange(_additionalAssemblies);
                     _assemblies = list.Distinct().ToArray();
                 }
-                    
+
                 localAssemblies = _assemblies;
             }
 
             _appInfo = GetAppInfoFromAssembly(mainAssembly);
 
             var typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
-            
+
             using var serviceProvider = new ServiceCollection().BuildServiceProvider();
             {
                 _iniPipeline = new Pipeline(serviceProvider);
@@ -119,22 +137,19 @@ namespace Modulos
                     .Select(Activator.CreateInstance)
                     .Cast<IUpdateInitializationPipeline>().ToArray();
 
-                foreach (var updater in updaters)
-                {
-                    updater.Update(_iniPipeline);
-                }
+                foreach (var updater in updaters) updater.Update(_iniPipeline);
 
                 updatePipeline.Invoke(_iniPipeline);
 
 
                 var parameters = additionalParameters.ToList();
-                if(!parameters.Any(e=>e is IAppInfo))
+                if (!parameters.Any(e => e is IAppInfo))
                     parameters.Add(_appInfo);
-                if(!parameters.Any(e=>e is Assembly[]))
+                if (!parameters.Any(e => e is Assembly[]))
                     parameters.Add(localAssemblies);
-                if(!parameters.Any(e=>e is ITypeExplorer))
+                if (!parameters.Any(e => e is ITypeExplorer))
                     parameters.Add(typeExplorer);
-                if(!parameters.Any(e=>e is IAssemblyExplorer))
+                if (!parameters.Any(e => e is IAssemblyExplorer))
                     parameters.Add(new AssemblyExplorer(localAssemblies));
 
                 _iniResult = _iniPipeline.Execute(CancellationToken.None, parameters.ToArray())
@@ -157,7 +172,7 @@ namespace Modulos
         }
 
         public IPipelineResult Configure(IServiceProvider serviceProvider,
-            Action<IPipeline> updatePipeline, 
+            Action<IPipeline> updatePipeline,
             params object[] additionalParameters)
         {
             if (serviceProvider == null) throw new ArgumentNullException(nameof(serviceProvider));
@@ -180,19 +195,22 @@ namespace Modulos
                     .Select(Activator.CreateInstance)
                     .Cast<IUpdateConfigPipeline>().ToArray();
 
-                foreach (var updater in updaters)
-                {
-                    updater.Update(_configPipeline);
-                }
+                foreach (var updater in updaters) updater.Update(_configPipeline);
 
                 var parameters = additionalParameters.ToList();
 
-                return _configResult = _configPipeline.Execute(CancellationToken.None, 
+                var result = _configResult = _configPipeline.Execute(CancellationToken.None,
                         parameters.ToArray())
                     .GetAwaiter().GetResult();
+
+                lock (_locker)
+                {
+                    _configured = true;
+                }
+
+                return result;
             }
         }
-
 
 
         public static bool IsExcludedAssemblyName(string name)
@@ -241,12 +259,6 @@ namespace Modulos
             }
         }
 
-        public void Dispose()
-        {
-            _iniResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-            _configResult?.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
 
         private void ExploreAssemblies(Predicate<Assembly> predicate = null)
         {
@@ -267,13 +279,11 @@ namespace Modulos
             if (names != null)
             {
                 foreach (var name in names)
-                {
                     result.AddRange
                     (
                         ExploreModulosAssemblies(Assembly.Load(name))
-                            .Where(e=>predicate == null || predicate(e))
+                            .Where(e => predicate == null || predicate(e))
                     );
-                }
 
                 lock (_locker)
                 {
@@ -283,18 +293,16 @@ namespace Modulos
             else
             {
                 var assemblies = AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(e=>!IsExcludedAssemblyName(e.GetName().Name))
+                    .Where(e => !IsExcludedAssemblyName(e.GetName().Name))
                     .Where(e => predicate == null || predicate(e))
                     .ToArray();
 
                 foreach (var assembly in assemblies)
-                {
                     result.AddRange
                     (
                         ExploreModulosAssemblies(assembly)
-                            .Where(e=>predicate == null || predicate(e))
+                            .Where(e => predicate == null || predicate(e))
                     );
-                }
 
                 lock (_locker)
                 {
@@ -341,7 +349,6 @@ namespace Modulos
                     break;
 
                 element = queue.Dequeue();
-
             }
 
             foreach (var modulosNode in nodes.Values.Where(e => e.IsModulos))
@@ -353,8 +360,7 @@ namespace Modulos
                         output.Add(node.Assembly, node.Assembly);
 
                     node = node.Parent;
-                }
-                while (node != null);
+                } while (node != null);
             }
 
             return output.Keys.ToArray();

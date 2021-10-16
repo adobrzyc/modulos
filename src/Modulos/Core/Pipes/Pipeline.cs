@@ -1,24 +1,25 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-
-// ReSharper disable UnusedMember.Global
+﻿// ReSharper disable UnusedMember.Global
+// ReSharper disable SuspiciousTypeConversion.Global
 
 namespace Modulos.Pipes
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Linq.Expressions;
+    using System.Reflection;
+    using System.Threading;
+    using System.Threading.Tasks;
+    using Microsoft.Extensions.DependencyInjection;
+
     public class Pipeline : IPipeline
     {
-        private static readonly ConcurrentDictionary<Type, ObjectActivator> activators = new ConcurrentDictionary<Type, ObjectActivator>();
+        private static readonly ConcurrentDictionary<Type, ObjectActivator> activators = new();
+        private readonly List<Type> _pipes = new();
 
         private readonly IServiceProvider _serviceProvider;
-        private readonly List<Type> _pipes = new List<Type>();
 
         public Pipeline(IServiceProvider serviceProvider)
         {
@@ -47,7 +48,7 @@ namespace Modulos.Pipes
             return Remove(typeof(T));
         }
 
-        public bool Remove(Type pipeType) 
+        public bool Remove(Type pipeType)
         {
             ThrowIfWrongPipeType(pipeType);
             return _pipes.Remove(pipeType);
@@ -57,9 +58,9 @@ namespace Modulos.Pipes
             where TPipeToFind : IPipe
             where TPipeToInsert : IPipe
         {
-            Insert(mode,typeof(TPipeToFind),typeof(TPipeToInsert));
+            Insert(mode, typeof(TPipeToFind), typeof(TPipeToInsert));
         }
-        
+
         public void Insert(InsertMode mode, Type pipeToFind, Type pipeToInsert)
         {
             ThrowIfWrongPipeType(pipeToFind);
@@ -67,7 +68,7 @@ namespace Modulos.Pipes
 
             ThrowIfAlreadyExists(pipeToInsert);
             var indexOf = _pipes.IndexOf(pipeToFind);
-            if(indexOf < 0)
+            if (indexOf < 0)
                 throw new ArgumentException($"Pipe does not exists: {pipeToFind.Name}.");
             switch (mode)
             {
@@ -80,13 +81,12 @@ namespace Modulos.Pipes
                 default:
                     throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
             }
-
         }
 
         public void AddOrReplace<T>() where T : IPipe
         {
-           AddOrReplace(typeof(T));
-        } 
+            AddOrReplace(typeof(T));
+        }
 
         public void AddOrReplace(Type pipeType)
         {
@@ -101,22 +101,19 @@ namespace Modulos.Pipes
 
             _pipes.Insert(index + 1, pipeType);
             _pipes.RemoveAt(index);
-        } 
+        }
 
         public void TryRemoveAndAdd<T>() where T : IPipe
         {
             TryRemoveAndAdd(typeof(T));
-        } 
+        }
 
         public void TryRemoveAndAdd(Type pipeType)
         {
             ThrowIfWrongPipeType(pipeType);
 
             var index = _pipes.IndexOf(pipeType);
-            if (index >= 0)
-            {
-                _pipes.RemoveAt(index);
-            }
+            if (index >= 0) _pipes.RemoveAt(index);
             Add(pipeType);
         }
 
@@ -131,7 +128,6 @@ namespace Modulos.Pipes
 
             return _pipes.IndexOf(pipeType);
         }
-
 
 
         public IEnumerable<Type> GetPipes()
@@ -153,80 +149,104 @@ namespace Modulos.Pipes
         {
             var optionalPipes = new List<Type>();
             var references = new List<object>(additionalReferences);
+            var executedPipes = new List<IPipe>();
 
-            foreach (var pipeType in _pipes)
+            try
             {
-                var breakBecauseOptional = false;
-                foreach (var optionalPipe in optionalPipes)
+                foreach (var pipeType in _pipes)
                 {
-                    var resolveOptionalResult = ResolvePipe(optionalPipe, references.ToArray());
-                    if (!resolveOptionalResult.Success)
-                        continue;
-
-                    var optional = resolveOptionalResult.Pipe;
-                    references.Add(optional);
-                    var optionalResult = await optional.Execute(cancellationToken);
-                    references.AddRange(optionalResult.PublishedData);
-
-                    switch (optionalResult.Action)
+                    foreach (var optionalPipe in optionalPipes)
                     {
-                        case PipeActionAfterExecute.Continue:
+                        var resolveOptionalResult = ResolvePipe(optionalPipe, references.ToArray());
+                        if (!resolveOptionalResult.Success)
                             continue;
-                        case PipeActionAfterExecute.Break:
-                            breakBecauseOptional = true;
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
+
+                        var optional = resolveOptionalResult.Pipe;
+                        references.Add(optional);
+
+                        try
+                        {
+                            executedPipes.Add(optional);
+
+                            var optionalResult = await optional.Execute(cancellationToken).ConfigureAwait(false);
+                            references.AddRange(optionalResult.PublishedData);
+
+                            switch (optionalResult.Action)
+                            {
+                                case PipeActionAfterExecute.Continue:
+                                    continue;
+                                case PipeActionAfterExecute.Break:
+                                    return new PipelineResult(references);
+                                default:
+                                    throw new ArgumentOutOfRangeException();
+                            }
+                        }
+                        catch (Exception error)
+                        {
+                            var executed = executedPipes.ToArray().Reverse();
+                            foreach (var pipe in executed)
+                                if (pipe is IPipeWithExceptionHandling pipeWithExceptionHandling)
+                                    await pipeWithExceptionHandling.WhenError(error, cancellationToken).ConfigureAwait(false);
+                            throw;
+                        }
+                    }
+
+                    var resolveResult = ResolvePipe(pipeType, references.ToArray());
+
+                    if (!resolveResult.Success)
+                    {
+                        optionalPipes.Add(pipeType);
+                        continue;
+                    }
+
+                    var instance = resolveResult.Pipe;
+                    references.Add(instance);
+
+                    try
+                    {
+                        executedPipes.Add(instance);
+                        var result = await instance.Execute(cancellationToken).ConfigureAwait(false);
+                        references.AddRange(result.PublishedData);
+
+                        switch (result.Action)
+                        {
+                            case PipeActionAfterExecute.Continue:
+                                continue;
+                            case PipeActionAfterExecute.Break:
+                                return new PipelineResult(references);
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    }
+                    catch (Exception error)
+                    {
+                        var executed = executedPipes.ToArray().Reverse();
+                        foreach (var pipe in executed)
+                            if (pipe is IPipeWithExceptionHandling pipeWithExceptionHandling)
+                                await pipeWithExceptionHandling.WhenError(error, cancellationToken).ConfigureAwait(false);
+                        throw;
                     }
                 }
-
-                if (breakBecauseOptional)
-                    break;
-
-                var resolveResult = ResolvePipe(pipeType, references.ToArray());
-               
-                if (!resolveResult.Success)
-                {
-                    optionalPipes.Add(pipeType);
-                    continue;
-                }
-
-                var instance = resolveResult.Pipe;
-                references.Add(instance);
-                var result = await instance.Execute(cancellationToken);
-
-                references.AddRange(result.PublishedData);
-
-                switch (result.Action)
-                {
-                    case PipeActionAfterExecute.Continue:
-                        continue;
-                    case PipeActionAfterExecute.Break:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-                return new PipelineResult(references);
+            }
+            finally
+            {
+                var executed = executedPipes.ToArray().Reverse();
+                foreach (var pipe in executed)
+                    switch (pipe)
+                    {
+                        case IAsyncDisposable asyncDisposable:
+                            await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+                            break;
+                        case IDisposable disposable:
+                            disposable.Dispose();
+                            break;
+                    }
             }
 
             return new PipelineResult(references);
         }
 
-
-        private class ResolvePipeResult
-        {
-            public bool Success { get; }
-            public IPipe Pipe { get; }
-
-            public ResolvePipeResult(bool success, IPipe pipe)
-            {
-                Success = success;
-                Pipe = pipe;
-            }
-        }
-
-        private ResolvePipeResult ResolvePipe(Type typeToResolve,  params object[] additionalData)
+        private ResolvePipeResult ResolvePipe(Type typeToResolve, params object[] additionalData)
         {
             var ctor = typeToResolve.GetConstructors()
                 .Select(e => (ctor: e, count: e.GetParameters().Length))
@@ -234,13 +254,14 @@ namespace Modulos.Pipes
                 .Select(e => e.ctor)
                 .First();
 
-            var @params = new Dictionary<Type,object>();
+            var @params = new Dictionary<Type, object>();
+
             foreach (var data in additionalData)
             {
                 var key = data.GetType();
                 if (@params.ContainsKey(key))
                     @params[key] = data;
-                else @params.Add(key,data);
+                else @params.Add(key, data);
             }
 
             var parameters = new List<object>();
@@ -262,7 +283,10 @@ namespace Modulos.Pipes
 
                 if ((paramInfo.Attributes & ParameterAttributes.Optional) != 0)
                 {
-                    var value = _serviceProvider?.GetService(paramInfo.ParameterType);
+                    // checked: GetService will return null for non-registered types, even for value types
+                    var value = _serviceProvider?.GetService(paramInfo.ParameterType)
+                                ?? paramInfo.ParameterType.GetDefault();
+
                     parameters.Add(value);
                 }
                 else
@@ -304,14 +328,14 @@ namespace Modulos.Pipes
                 activators.TryAdd(typeToResolve, CreateObjectActivator(ctor));
             }
 
-            var pipe = (IPipe) activator(parameters.ToArray());
-            return new ResolvePipeResult(true,pipe);
+            var pipe = (IPipe)activator(parameters.ToArray());
+            return new ResolvePipeResult(true, pipe);
         }
 
         private void ThrowIfAlreadyExists(Type pipeType)
         {
             if (_pipes.Contains(pipeType))
-                throw new ArgumentException($"Pipe already exists.", pipeType.Name);
+                throw new ArgumentException("Pipe already exists.", pipeType.Name);
         }
 
         private void ThrowIfWrongPipeType(Type pipeType)
@@ -346,9 +370,22 @@ namespace Modulos.Pipes
             // Create a lambda with the New expression as body and our param object[] as arg
             var lambda = Expression.Lambda(typeof(ObjectActivator), newExp, param);
 
-            var compiled = (ObjectActivator) lambda.Compile();
+            var compiled = (ObjectActivator)lambda.Compile();
 
             return compiled;
+        }
+
+
+        private class ResolvePipeResult
+        {
+            public ResolvePipeResult(bool success, IPipe pipe)
+            {
+                Success = success;
+                Pipe = pipe;
+            }
+
+            public bool Success { get; }
+            public IPipe Pipe { get; }
         }
 
         private delegate object ObjectActivator(params object[] args);

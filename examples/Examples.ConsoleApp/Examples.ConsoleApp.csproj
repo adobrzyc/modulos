@@ -1,26 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-  </PropertyGroup>
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include=".Config\Configuration\Pipes\ConfigureAppWhenFileStorage.cs" />
-    <Compile Include=".Config\Configuration\Pipes\ConfigureAppWhenInMemoryStorage.cs" />
-    <Compile Include=".Config\Configuration\UpdateConfigPipeline.cs" />
-    <Compile Include=".Config\Initialization\Pipes\MakeSomeActionBaseOnConfiguration.cs" />
-    <Compile Include=".Config\Initialization\Pipes\PrepareConfiguration.cs" />
-    <Compile Include=".Config\Initialization\UpdateInitializationPipeline.cs" />
-    <Compile Include=".Config\DependencyInjection\RegisterStorageModule.cs" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Modulos\Modulos.csproj" />
-  </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Modulos\Modulos.csproj"/>
+    </ItemGroup>
 
 </Project>

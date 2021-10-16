@@ -1,60 +1,49 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <VersionPrefix>0.0.1</VersionPrefix>
-  </PropertyGroup>
+    <PropertyGroup>
+        <VersionPrefix>0.0.1</VersionPrefix>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+        <LangVersion>latest</LangVersion>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <PackageTags>modulos;dependency injection;modular application;monolith</PackageTags>
-    <Description>Support creating applications based on reconfigurable: DI modules, pipelines and configurations.</Description>
-    <PackageIcon>icon.png</PackageIcon>
-  </PropertyGroup>
+    <PropertyGroup>
+        <PackageTags>modulos;dependency injection;modular application;monolith</PackageTags>
+        <Description>Support creating applications based on reconfigurable: DI modules, pipelines and configurations.</Description>
+        <PackageIcon>icon.png</PackageIcon>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <PackageProjectUrl>https://github.com/adobrzyc/modulos</PackageProjectUrl>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/adobrzyc/modulos</RepositoryUrl>
-    <PublishRepositoryUrl>true</PublishRepositoryUrl>
-  </PropertyGroup>
+    <PropertyGroup>
+        <PackageProjectUrl>https://github.com/adobrzyc/modulos</PackageProjectUrl>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/adobrzyc/modulos</RepositoryUrl>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    </PropertyGroup>
 
-  <PropertyGroup>
-    <Authors>Adrian Dobrzycki</Authors>
-    <Copyright>Adrian Dobrzycki</Copyright>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-  </PropertyGroup>
+    <PropertyGroup>
+        <Authors>Adrian Dobrzycki</Authors>
+        <Copyright>Adrian Dobrzycki</Copyright>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    </PropertyGroup>
 
 
-  <ItemGroup>
-    <Compile Include="Core\.Config\RegisterCoreElementsModule.cs" />
-    <Compile Include=".Config\SetInternalVisibility.cs" />
-    <Compile Include="Core\Errors\.Config\ErrorsDiModule.cs" />
-    <Compile Include="Core\Pipes\.Config\PipesRegistrationModule.cs" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
+    <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" />
+    </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="3.0.0" />
-  </ItemGroup>
+    <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
+    </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\icon.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
+    <ItemGroup>
+        <Content Include="..\..\icon.png">
+            <Pack>True</Pack>
+            <PackagePath></PackagePath>
+        </Content>
+    </ItemGroup>
 
 </Project>

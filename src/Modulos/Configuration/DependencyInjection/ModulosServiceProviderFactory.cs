@@ -1,11 +1,11 @@
-﻿using System;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace Modulos
+﻿namespace Modulos
 {
+    using System;
+    using Microsoft.Extensions.DependencyInjection;
+
     /// <summary>
-    /// Allow using <see cref="IServiceProviderFactory{TContainerBuilder}"/> with additional
-    /// initialization parameters. 
+    /// Allow using <see cref="IServiceProviderFactory{TContainerBuilder}" /> with additional
+    /// initialization parameters.
     /// </summary>
     public class ModulosServiceProviderFactory : ModulosServiceProviderFactoryBase<IServiceCollection>
     {
@@ -20,11 +20,11 @@ namespace Modulos
         /// Additional parameters available for auto registration modules.
         /// </param>
         public ModulosServiceProviderFactory(ModulosApp modulos,
-            Action<AutoRegistrationModule> modifier = null, params object[] parameters) 
+            Action<AutoRegistrationModule> modifier = null, params object[] parameters)
             : base(modulos, collection => collection, modifier, parameters)
         {
         }
-        
+
         protected override void Populate(IServiceCollection builder, IServiceCollection collection)
         {
             // intended do nothing

@@ -1,21 +1,22 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Modulos;
-
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
 namespace Examples.AspNetCoreApp
 {
+    using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
+    using Microsoft.Extensions.Configuration;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Hosting;
+    using Modulos;
+
     public class Startup
     {
         private readonly ModulosApp modulos = new ModulosApp();
+
         public Startup(IConfiguration configuration)
         {
-            modulos.Initialize<Startup>(configuration);
+            modulos.Initialize(configuration);
             Configuration = configuration;
         }
 
@@ -34,24 +35,15 @@ namespace Examples.AspNetCoreApp
         {
             modulos.Configure(app.ApplicationServices);
 
-            lifetime.ApplicationStopping.Register(() =>
-            {
-                modulos.Dispose();
-            });
+            lifetime.ApplicationStopping.Register(() => { modulos.Dispose(); });
 
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            if (env.IsDevelopment()) app.UseDeveloperExceptionPage();
 
             app.UseRouting();
 
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-
-namespace Modulos.Pipes
+﻿namespace Modulos.Pipes
 {
+    using System;
+    using System.Diagnostics.CodeAnalysis;
+
     [ExcludeFromCodeCoverage]
     public sealed class MissingDataFromPipelineResultException : Exception
     {

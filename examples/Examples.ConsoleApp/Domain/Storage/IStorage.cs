@@ -1,4 +1,6 @@
 ﻿namespace Examples.ConsoleApp.Storage
 {
-    public interface IStorage {}
+    public interface IStorage
+    {
+    }
 }

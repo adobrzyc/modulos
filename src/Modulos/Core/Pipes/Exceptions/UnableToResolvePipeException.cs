@@ -1,8 +1,10 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿// ReSharper disable UnusedMember.Global
 
 namespace Modulos.Pipes
 {
+    using System;
+    using System.Diagnostics.CodeAnalysis;
+
     [ExcludeFromCodeCoverage]
     public class UnableToResolvePipeException : Exception
     {

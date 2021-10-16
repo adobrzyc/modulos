@@ -1,11 +1,11 @@
-﻿using System;
-
-// ReSharper disable ClassNeverInstantiated.Global
+﻿// ReSharper disable ClassNeverInstantiated.Global
 
 namespace Modulos
 {
+    using System;
+
     /// <summary>
-    /// If defined, it blocks any automatic operation developed by modulos.
+    /// Blocks any automatic operation developed by modulos.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, Inherited = false)]
     public sealed class SuppressAutoAttribute : Attribute

@@ -1,33 +1,34 @@
 ﻿// ReSharper disable UnusedMember.Global
+
 namespace Modulos
 {
     /// <summary>
-    /// Defines load order for some of modulos mechanisms. 
+    /// Defines load order.
     /// </summary>
     public enum LoadOrder
     {
         /// <summary>
-        /// Reserved for internal modulos usage.
+        /// Reserved for core libraries e.q. modulos.
         /// </summary>
-        Internal,
+        Core,
 
         /// <summary>
-        /// Reserved for elements located in external libraries.
+        /// Reserved for elements located in the external libraries.
         /// </summary>
         Library,
 
         /// <summary>
-        /// Reserved for elements located in solution projects.
+        /// Reserved for elements located in the solution projects.
         /// </summary>
         Project,
 
         /// <summary>
-        /// Reserved for elements located in application projects (eq.: console app, web api).
+        /// Reserved for elements located in the application projects (eq.: console app, web api).
         /// </summary>
         App,
 
         /// <summary>
-        /// Reserved for elements located in test projects.
+        /// Reserved for elements located in the test projects.
         /// </summary>
         Test
     }

@@ -1,9 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Reflection;
-
-namespace Modulos
+﻿namespace Modulos
 {
+    using System;
+    using System.Linq;
+    using System.Reflection;
+
     internal class TypeExplorer : ITypeExplorer
     {
         private readonly Type[] _classes;

@@ -1,14 +1,14 @@
-using System.Threading;
-using System.Threading.Tasks;
-using FluentAssertions;
-using Modulos.Pipes;
-using Xunit;
-
 // ReSharper disable InconsistentNaming
 // ReSharper disable ClassNeverInstantiated.Local
 
 namespace Examples.Modulos
 {
+    using System.Threading;
+    using System.Threading.Tasks;
+    using FluentAssertions;
+    using global::Modulos.Pipes;
+    using Xunit;
+
     public class Pipeline_optional_pipe_examples
     {
         [Fact]

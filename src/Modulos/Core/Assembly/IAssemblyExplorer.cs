@@ -1,7 +1,7 @@
-﻿using System.Reflection;
-
-namespace Modulos
+﻿namespace Modulos
 {
+    using System.Reflection;
+
     /// <summary>
     /// Enables explore assemblies of modulos application.
     /// </summary>
@@ -10,6 +10,6 @@ namespace Modulos
         /// <summary>
         /// Available assemblies.
         /// </summary>
-        Assembly[] Assemblies { get; } 
+        Assembly[] Assemblies { get; }
     }
 }

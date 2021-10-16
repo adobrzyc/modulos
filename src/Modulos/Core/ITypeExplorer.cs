@@ -1,10 +1,10 @@
-﻿using System;
-
-// ReSharper disable UnusedMemberInSuper.Global
+﻿// ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable UnusedMember.Global
 
 namespace Modulos
 {
+    using System;
+
     public interface ITypeExplorer
     {
         Type[] GetSearchableClasses(Func<Type, bool> filter = null);

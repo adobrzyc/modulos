@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
-namespace Modulos
+﻿namespace Modulos
 {
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
+
     public class AssemblyExplorer : IAssemblyExplorer
     {
-        public Assembly[] Assemblies { get; }
-
         public AssemblyExplorer(IEnumerable<Assembly> assemblies)
         {
             Assemblies = assemblies.ToArray();
         }
+
+        public Assembly[] Assemblies { get; }
     }
 }

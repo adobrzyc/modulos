@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-
-// ReSharper disable UnusedMember.Global
+﻿// ReSharper disable UnusedMember.Global
 
 namespace Modulos.Pipes
 {
-    public interface IPipeline : IEnumerable<Type> 
+    using System;
+    using System.Collections.Generic;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    public interface IPipeline : IEnumerable<Type>
     {
         IEnumerable<Type> GetPipes();
 

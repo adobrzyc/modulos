@@ -1,23 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using Microsoft.Extensions.DependencyInjection;
-
-// ReSharper disable UnusedParameter.Global
+﻿// ReSharper disable UnusedParameter.Global
 
 namespace Modulos
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reflection;
+    using Microsoft.Extensions.DependencyInjection;
+
     public abstract class ModulosServiceProviderFactoryBase<TBuilder> : IServiceProviderFactory<TBuilder>
     {
-        private readonly ModulosApp _modulos;
         private readonly Func<IServiceCollection, TBuilder> _builderFactory;
         private readonly Action<AutoRegistrationModule> _modifier;
+        private readonly ModulosApp _modulos;
         private readonly IDictionary<Type, object> _parameters;
 
-        protected ModulosServiceProviderFactoryBase(ModulosApp modulos, 
-            Func<IServiceCollection,TBuilder> builderFactory,
-            Action<AutoRegistrationModule> modifier = null, 
+        protected ModulosServiceProviderFactoryBase(ModulosApp modulos,
+            Func<IServiceCollection, TBuilder> builderFactory,
+            Action<AutoRegistrationModule> modifier = null,
             params object[] parameters)
         {
             _modulos = modulos;
@@ -25,19 +25,13 @@ namespace Modulos
             _modifier = modifier;
             _parameters = parameters?.ToDictionary
             (
-                e=>e.GetType(),
-                e=>e
+                e => e.GetType(),
+                e => e
             ) ?? new Dictionary<Type, object>();
 
-            if (!_parameters.ContainsKey(typeof(IAppInfo)))
-            {
-                _parameters.Add(typeof(IAppInfo), modulos.AppInfo);
-            }
+            if (!_parameters.ContainsKey(typeof(IAppInfo))) _parameters.Add(typeof(IAppInfo), modulos.AppInfo);
 
-            if (!_parameters.ContainsKey(typeof(Assembly[])))
-            {
-                _parameters.Add(typeof(Assembly[]), modulos.Assemblies);
-            }
+            if (!_parameters.ContainsKey(typeof(Assembly[]))) _parameters.Add(typeof(Assembly[]), modulos.Assemblies);
 
             if (!_parameters.ContainsKey(typeof(IAssemblyExplorer)))
             {
@@ -52,13 +46,9 @@ namespace Modulos
             if (!_parameters.ContainsKey(typeof(ITypeExplorer)))
             {
                 var assemblyExplorer = (IAssemblyExplorer)_parameters[typeof(IAssemblyExplorer)];
-                _parameters.Add(typeof(ITypeExplorer),new TypeExplorer(assemblyExplorer));
+                _parameters.Add(typeof(ITypeExplorer), new TypeExplorer(assemblyExplorer));
             }
         }
-
-        protected abstract void Populate(TBuilder builder, IServiceCollection collection);
-
-        protected abstract IServiceProvider Build(TBuilder builder);
 
         public TBuilder CreateBuilder(IServiceCollection services)
         {
@@ -84,7 +74,7 @@ namespace Modulos
 
             foreach (var microsoft in microsoftModules)
             {
-                var module = (IModule<IServiceCollection>) microsoft.Instance;
+                var module = (IModule<IServiceCollection>)microsoft.Instance;
                 module.Load(services);
             }
 
@@ -97,11 +87,11 @@ namespace Modulos
 
                 foreach (var custom in customModules)
                 {
-                    var module = (IModule<TBuilder>) custom.Instance;
+                    var module = (IModule<TBuilder>)custom.Instance;
                     module.Load(builder);
                 }
             }
-          
+
 
             /*
             
@@ -149,6 +139,10 @@ namespace Modulos
             return Build(containerBuilder);
         }
 
+        protected abstract void Populate(TBuilder builder, IServiceCollection collection);
+
+        protected abstract IServiceProvider Build(TBuilder builder);
+
         private IEnumerable<AutoRegistrationModule> GetModules(IEnumerable<Assembly> assemblies)
         {
             var assembliesArray = assemblies as Assembly[] ?? assemblies.ToArray();
@@ -185,19 +179,17 @@ namespace Modulos
                         continue;
                     }
                 }
+
                 if ((paramInfo.Attributes & ParameterAttributes.Optional) != 0)
                     args.Add(paramInfo.ParameterType.GetDefault());
                 else
-                {
                     throw new ApplicationException(
                         $"Unable to create parameter: {paramInfo.ParameterType.FullName} for {moduleType.FullName} ctor.");
-                }
-              
             }
+
             var instance = (IModule)Activator.CreateInstance(moduleType, args.ToArray());
 
             return new AutoRegistrationModule(instance);
         }
-
     }
 }

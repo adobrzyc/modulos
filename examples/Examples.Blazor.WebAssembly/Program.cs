@@ -1,16 +1,17 @@
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using System;
-using System.Net.Http;
-using System.Reflection;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Modulos;
-using Newtonsoft.Json;
-
 // ReSharper disable PossibleNullReferenceException
 
 namespace Examples.Blazor.WebAssembly
 {
+    using System;
+    using System.Net.Http;
+    using System.Reflection;
+    using System.Threading.Tasks;
+    using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+    using Microsoft.Extensions.DependencyInjection;
+    using Modulos;
+    using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
+
     public class Program
     {
         public static async Task Main(string[] args)
@@ -26,7 +27,7 @@ namespace Examples.Blazor.WebAssembly
                 var json = await http.GetStringAsync("_framework/blazor.boot.json");
                 dynamic doc = JsonConvert.DeserializeObject(json);
 
-                foreach (Newtonsoft.Json.Linq.JProperty prop in doc.resources.assembly)
+                foreach (JProperty prop in doc.resources.assembly)
                 {
                     var name = prop.Name.Replace(".dll", "");
                     if (ModulosApp.IsExcludedAssemblyName(name))
@@ -39,9 +40,9 @@ namespace Examples.Blazor.WebAssembly
             }
 
             var modulosApp = new ModulosApp();
-            modulosApp.Initialize();
-            
-            builder.ConfigureContainer(new FactoryForBlazor(modulosApp), collection => {});
+            modulosApp.Initialize(typeof(Program).Assembly);
+
+            builder.ConfigureContainer(new FactoryForBlazor(modulosApp), collection => { collection.AddScoped(_ => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) }); });
 
             await builder.Build().RunAsync();
         }

@@ -24,6 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		build.ps1 = build.ps1
 		icon.png = icon.png
 		README.md = README.md
+		LICENSE = LICENSE
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Examples.ConsoleApp", "examples\Examples.ConsoleApp\Examples.ConsoleApp.csproj", "{F551D701-48F3-488D-9A9D-B27C7A89201F}"

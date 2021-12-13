@@ -26,7 +26,8 @@ namespace Modulos
         private IPipeline _iniPipeline;
         private IPipelineResult _iniResult;
         private bool _initialized;
-
+        private ITypeExplorer _typeExplorer;
+        
         public Assembly[] Assemblies
         {
             get
@@ -77,6 +78,37 @@ namespace Modulos
             }
         }
 
+        public ITypeExplorer TypeExplorer
+        {
+            get
+            {
+                lock (_locker)
+                {
+                    if (!_initialized)
+                        throw new InvalidOperationException
+                        (
+                            $"Property: {nameof(TypeExplorer)}" +
+                            " is available after initialization process."
+                        );
+
+                    return _typeExplorer;
+                }
+            }
+            private set
+            {
+                lock (_locker)
+                {
+                    if (_initialized)
+                        throw new InvalidOperationException
+                        (
+                            $"Property: {nameof(TypeExplorer)}" +
+                            " can not be set after initialization is performed."
+                        );
+
+                    _typeExplorer = value;
+                }
+            }
+        }
         public bool IsConfigured
         {
             get
@@ -126,14 +158,17 @@ namespace Modulos
 
             _appInfo = GetAppInfoFromAssembly(mainAssembly);
 
-            var typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
-
+            lock (_locker)
+            {
+                _typeExplorer = new TypeExplorer(new AssemblyExplorer(localAssemblies));
+            }
+            
             using var serviceProvider = new ServiceCollection().BuildServiceProvider();
             {
                 _iniPipeline = new Pipeline(serviceProvider);
                 _iniPipeline.Add<Initialization.Begin>();
 
-                var updaters = typeExplorer.GetSearchableClasses<IUpdateInitializationPipeline>()
+                var updaters = _typeExplorer.GetSearchableClasses<IUpdateInitializationPipeline>()
                     .Select(Activator.CreateInstance)
                     .Cast<IUpdateInitializationPipeline>().ToArray();
 
@@ -148,7 +183,7 @@ namespace Modulos
                 if (!parameters.Any(e => e is Assembly[]))
                     parameters.Add(localAssemblies);
                 if (!parameters.Any(e => e is ITypeExplorer))
-                    parameters.Add(typeExplorer);
+                    parameters.Add(_typeExplorer);
                 if (!parameters.Any(e => e is IAssemblyExplorer))
                     parameters.Add(new AssemblyExplorer(localAssemblies));
 

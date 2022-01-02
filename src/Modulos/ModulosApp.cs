@@ -219,12 +219,12 @@ namespace Modulos
                     throw new InvalidOperationException("Can not call this method before initialization.");
             }
 
-            using var scope = serviceProvider.CreateScope();
+            var scope = serviceProvider.CreateScope();
+            try
             {
                 _configPipeline = new Pipeline(scope.ServiceProvider);
                 _configPipeline.Add<Configuration.Begin>();
-
-
+                
                 var typeExplorer = serviceProvider.GetRequiredService<ITypeExplorer>();
                 var updaters = typeExplorer.GetSearchableClasses<IUpdateConfigPipeline>()
                     .Select(Activator.CreateInstance)
@@ -244,6 +244,17 @@ namespace Modulos
                 }
 
                 return result;
+            }
+            finally
+            {
+                if (scope is IAsyncDisposable asyncDisposable)
+                {
+                    asyncDisposable.DisposeAsync().GetAwaiter().GetResult();
+                }
+                else
+                {
+                    scope.Dispose();
+                }
             }
         }
 
